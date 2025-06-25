@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: DigiITBot Lambda App
+
+Resources:
+  DigitITBotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DigitITBotFunction
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      CodeUri: .
+      Timeout: 30
+      MemorySize: 512
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Environment:
+        Variables:
+          OPENAI_API_KEY: !Ref OpenAIKey
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /
+            Method: post
+
+Parameters:
+  OpenAIKey:
+    Type: String
+    NoEcho: true
+    Description: "OpenAI API Key"
+
+Outputs:
+  OpenApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
