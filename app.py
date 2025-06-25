@@ -3,20 +3,17 @@ import openai
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env if present
+# Load environment variables
 load_dotenv()
 
-# Get OpenAI API Key from environment
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
+# Initialize Flask app
 app = Flask(__name__)
 
-@app.route("/", methods=["GET"])
-def index():
-    return jsonify({"message": "DigiITBot is live!"})
+# Load OpenAI API key from environment
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route("/", methods=["POST"])
-def handle_message():
+def chat():
     data = request.get_json()
     message = data.get("message", "")
 
@@ -27,7 +24,7 @@ def handle_message():
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are DigiITBot, an expert in IT, ITSM, ITIL, ServiceNow, cloud, infrastructure, networking, coding, and devices. Provide links for further reading when possible."},
+                {"role": "system", "content": "You are DigiITBot, an expert in IT, ITIL, Cloud, Networking, Programming, and related topics. Always provide helpful answers with at least one trusted URL or source link."},
                 {"role": "user", "content": message}
             ]
         )

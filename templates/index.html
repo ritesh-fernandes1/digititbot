@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DigiITBot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="chat-container">
+        <h1>DigiITBot 🤖</h1>
+        <div class="chat-box" id="chat-box"></div>
+        <form id="chat-form">
+            <input type="text" id="user-input" placeholder="Ask DigiITBot anything IT-related..." required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('chat-form');
+        const chatBox = document.getElementById('chat-box');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('user-input');
+            const userText = input.value;
+            appendMessage('You', userText);
+            input.value = '';
+            appendMessage('DigiITBot', 'Thinking...');
+
+            const res = await fetch('/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: userText })
+            });
+            const data = await res.json();
+            chatBox.lastChild.innerHTML = `<strong>DigiITBot:</strong> ${data.response}`;
+        };
+
+        function appendMessage(sender, text) {
+            const msg = document.createElement('div');
+            msg.className = 'message';
+            msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
+            chatBox.appendChild(msg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
