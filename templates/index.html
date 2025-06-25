@@ -1,45 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DigitITBot - IT Expert Assistant</title>
-  <link rel="stylesheet" href="/static/styles.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>DigitITBot</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <div class="chat-container">
-    <h1>💻 DigitITBot</h1>
-    <div id="chat-box" class="chat-box"></div>
-    <div class="input-area">
-      <input type="text" id="user-input" placeholder="Ask an IT question..." />
-      <button onclick="sendMessage()">Send</button>
+    <div class="chat-container">
+        <div class="chat-box" id="chat-box"></div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Ask an IT question..." autocomplete="off" />
+            <button onclick="sendMessage()">Send</button>
+        </div>
     </div>
-  </div>
-
-  <script>
+<script>
     async function sendMessage() {
-      const input = document.getElementById("user-input");
-      const chatBox = document.getElementById("chat-box");
-      const userMessage = input.value.trim();
-      if (!userMessage) return;
+        const input = document.getElementById("user-input");
+        const message = input.value;
+        if (!message.trim()) return;
 
-      chatBox.innerHTML += `<div class="bubble user"><strong>You:</strong> ${userMessage}</div>`;
-      input.value = "";
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML += `<div class="user-bubble">You: ${message}</div>`;
+        input.value = "";
 
-      chatBox.innerHTML += `<div class="bubble bot"><em>DigitITBot is thinking...</em></div>`;
-      chatBox.scrollTop = chatBox.scrollHeight;
+        const thinking = document.createElement("div");
+        thinking.className = "bot-bubble";
+        thinking.textContent = "DigitITBot is thinking...";
+        chatBox.appendChild(thinking);
+        chatBox.scrollTop = chatBox.scrollHeight;
 
-      const response = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage })
-      });
+        const res = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message })
+        });
 
-      const data = await response.json();
-      chatBox.removeChild(chatBox.lastChild);
-      chatBox.innerHTML += `<div class="bubble bot"><strong>DigitITBot:</strong> ${data.response}</div>`;
-      chatBox.scrollTop = chatBox.scrollHeight;
+        const data = await res.json();
+        thinking.remove();
+        chatBox.innerHTML += `<div class="bot-bubble">DigitITBot: ${data.response}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
-  </script>
+</script>
 </body>
 </html>

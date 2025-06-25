@@ -1,37 +1,27 @@
 import os
-from openai import OpenAI
+import openai
 from dotenv import load_dotenv
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-ALLOWED_TOPICS = [
-    "Information Technology", "Cloud Technology", "Virtualization", "ITIL", "ITSM",
-    "ServiceNow", "IT infrastructure", "Networking", "Laptops", "Desktops",
-    "Tablets", "Servers", "Software Development", "Programming", "On-Premise Infrastructure",
-    "Hybrid Infrastructure", "Agile Models", "Waterfall Models"
-]
-
-def is_allowed_topic(message):
-    return any(topic.lower() in message.lower() for topic in ALLOWED_TOPICS)
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def get_bot_response(user_input):
-    if not is_allowed_topic(user_input):
-        return "❌ Sorry, DigitITBot only answers questions related to IT, ITIL, ITSM, ServiceNow, infrastructure, networking, programming, and related technologies."
+    prompt = f"""
+    You are DigitITBot, an expert IT assistant. You answer only IT-related questions (including but not limited to: Information Technology, ITIL, ITSM, ServiceNow, Programming, Networking, Devices, Hybrid/Cloud/On-Prem Infrastructure).
+
+    If the user's question seems unrelated to IT, try to reinterpret it with an IT context and answer accordingly.
+
+    User: {user_input}
+    DigitITBot:
+    """
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4",
+        response = openai.chat.completions.create(
+            model="gpt-4o",
             messages=[
-                {"role": "system", "content": (
-                    "You are DigitITBot, an expert assistant in Information Technology, IT Infrastructure, ITIL, ITSM, "
-                    "ServiceNow, Networking, Devices, Cloud, Programming, and DevOps. "
-                    "Answer only questions from these domains. Provide helpful links to documentation when possible."
-                )},
-                {"role": "user", "content": user_input}
-            ],
-            temperature=0.7,
-            max_tokens=700
+                {"role": "system", "content": "You are an IT expert bot named DigitITBot."},
+                {"role": "user", "content": prompt}
+            ]
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
