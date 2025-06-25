@@ -1,48 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>DigiITBot</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <title>DigiITBot</title>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial; background: #f4f4f4; padding: 2rem; }
+    #chat { max-width: 600px; margin: auto; background: #fff; padding: 1rem; border-radius: 10px; }
+    .message { margin: 1rem 0; }
+    .user { font-weight: bold; color: #2c3e50; }
+    .bot { color: #16a085; }
+  </style>
 </head>
 <body>
-    <div class="chat-container">
-        <h1>DigiITBot 🤖</h1>
-        <div class="chat-box" id="chat-box"></div>
-        <form id="chat-form">
-            <input type="text" id="user-input" placeholder="Ask DigiITBot anything IT-related..." required>
-            <button type="submit">Send</button>
-        </form>
-    </div>
+  <div id="chat">
+    <div class="message"><span class="bot">DigiITBot:</span> Hello! Ask me anything about IT.</div>
+  </div>
+  <input id="user-input" placeholder="Type your question..." style="width: 80%;">
+  <button onclick="sendMessage()">Send</button>
 
-    <script>
-        const form = document.getElementById('chat-form');
-        const chatBox = document.getElementById('chat-box');
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById('user-input');
+      const message = input.value.trim();
+      if (!message) return;
 
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            const input = document.getElementById('user-input');
-            const userText = input.value;
-            appendMessage('You', userText);
-            input.value = '';
-            appendMessage('DigiITBot', 'Thinking...');
+      const chat = document.getElementById('chat');
+      chat.innerHTML += `<div class="message"><span class="user">You:</span> ${message}</div>`;
+      input.value = '';
 
-            const res = await fetch('/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userText })
-            });
-            const data = await res.json();
-            chatBox.lastChild.innerHTML = `<strong>DigiITBot:</strong> ${data.response}`;
-        };
+      const response = await fetch('/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
 
-        function appendMessage(sender, text) {
-            const msg = document.createElement('div');
-            msg.className = 'message';
-            msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
-            chatBox.appendChild(msg);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-    </script>
+      const data = await response.json();
+      chat.innerHTML += `<div class="message"><span class="bot">DigiITBot:</span> ${data.response || data.error}</div>`;
+    }
+  </script>
 </body>
 </html>
