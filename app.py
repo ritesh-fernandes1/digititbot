@@ -1,5 +1,5 @@
-from flask import Flask, request, jsonify, render_template
-from digiitbot import get_bot_response
+from flask import Flask, request, render_template, jsonify
+from digititbot import get_bot_response  # ✅ Corrected module name
 from dotenv import load_dotenv
 import os
 
@@ -7,19 +7,20 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# ✅ Homepage route
-@app.route('/', methods=['GET'])
-def home():
-    return render_template('index.html')  # This should load the UI
+@app.route("/")
+def index():
+    return render_template("index.html")
 
-# ✅ POST endpoint for chatbot
-@app.route('/ask', methods=['POST'])
+@app.route("/ask", methods=["POST"])
 def ask():
-    user_input = request.json.get('message')
+    user_input = request.json.get("message", "")
     if not user_input:
-        return jsonify({'error': 'No message provided'}), 400
+        return jsonify({"response": "Please enter a valid question."}), 400
     try:
-        response = get_bot_response(user_input)
-        return jsonify({'response': response})
+        bot_response = get_bot_response(user_input)
+        return jsonify({"response": bot_response})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"response": f"Error: {str(e)}"}), 500
+
+if __name__ == "__main__":
+    app.run(debug=True)
