@@ -7,10 +7,12 @@ load_dotenv()
 
 app = Flask(__name__)
 
-@app.route('/')
+# ✅ Homepage route
+@app.route('/', methods=['GET'])
 def home():
-    return render_template('index.html')
+    return render_template('index.html')  # This should load the UI
 
+# ✅ POST endpoint for chatbot
 @app.route('/ask', methods=['POST'])
 def ask():
     user_input = request.json.get('message')
