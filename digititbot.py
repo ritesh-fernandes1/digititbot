@@ -1,38 +1,42 @@
 import os
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Topics allowed for digititbot to respond to
 ALLOWED_TOPICS = [
-    "IT", "Mobile Devices", "PDAs", "Tablets", "Computers", "Computer Networking",
-    "Laptop Computers", "Desktop Computers", "Agile Models", "Waterfall Models",
-    "Software Programming", "Coding", "Micro Processors", "Servers", "On-Premise Infrastructure",
-    "Hybrid Infrastructure", "Cloud Infrastructure Technology", "Virtualization", "ITIL", "ITSM",
-    "ServiceNow", "General IT", "IT Infrastructure"
+    "Information Technology", "Mobile Devices", "PDAs", "Tablets", "Computers", "Computer Networking",
+    "Laptop Computers", "Desktop Computers", "Agile Models", "Waterfall Models", "Software Programming",
+    "Coding", "Micro Processors", "Servers", "On-Premise Infrastructure", "Hybrid Infrastructure",
+    "Cloud Infrastructure Technology", "Virtualization", "ITIL", "ITSM", "ServiceNow"
 ]
 
-def get_bot_response(user_query):
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are DigiITBot, an expert assistant that only answers questions related to "
-                "Information Technology, Mobile Devices, Computers, Networking, Agile/Waterfall Models, "
-                "Programming, Cloud/Hybrid Infrastructure, ITIL, ITSM, and ServiceNow. If the question is "
-                "outside this scope, politely decline and say you only answer IT-related questions. "
-                "For valid answers, provide trusted external URLs for further reading."
-            )
-        },
-        {"role": "user", "content": user_query}
-    ]
+def is_allowed_topic(message):
+    return any(topic.lower() in message.lower() for topic in ALLOWED_TOPICS)
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=messages,
-        temperature=0.5,
-        max_tokens=700
-    )
+def get_bot_response(user_message):
+    if not is_allowed_topic(user_message):
+        return ("Sorry, I can only answer questions related to IT, Infrastructure, Cloud, Networking, "
+                "ITSM, ITIL, ServiceNow, Programming, and Devices. Please ask a relevant question.")
 
-    return response['choices'][0]['message']['content'].strip()
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": (
+                    "You are DigiITBot, an expert in Information Technology, Cloud Infrastructure, "
+                    "Networking, Programming, ITSM, ServiceNow, and the ITIL framework. "
+                    "You must include hyperlinks to reputable sources (e.g., Microsoft, AWS, ITIL, ServiceNow docs).")},
+                {"role": "user", "content": user_message}
+            ],
+            temperature=0.5,
+            max_tokens=500
+        )
+
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        return f"Error: {str(e)}"
