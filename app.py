@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from DigitITBot import get_bot_response
+from digititbot import get_bot_response
 
 app = Flask(__name__)
 
