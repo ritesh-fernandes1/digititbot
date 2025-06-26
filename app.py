@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
-from digititbot import get_bot_response
+from digititbot import get_bot_response  # ✅ Correct lowercase
+import markdown
 
 app = Flask(__name__)
 
