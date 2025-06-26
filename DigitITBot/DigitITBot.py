@@ -1,5 +1,6 @@
 import os
 import openai
+import markdown
 from dotenv import load_dotenv
 
 # Load environment variables from .env
@@ -22,40 +23,38 @@ def is_relevant_topic(user_input: str) -> bool:
 # Main response function
 def get_bot_response(user_input: str) -> str:
     try:
-        # If relevant question, ask OpenAI directly
+        # Choose appropriate prompt based on topic relevance
         if is_relevant_topic(user_input):
             messages = [
                 {
                     "role": "system",
                     "content": (
                         "You are DigitITBot, an expert IT assistant. "
-                        "Answer IT-related questions with concise, clear information. "
-                        "Always include bullet points where relevant and helpful hyperlinks."
+                        "Answer IT-related questions with clear bullet points and clickable hyperlinks using Markdown."
                     )
                 },
                 {"role": "user", "content": user_input}
             ]
         else:
-            # Try to reinterpret unrelated queries in an IT context
             messages = [
                 {
                     "role": "system",
                     "content": (
                         "You are DigitITBot, a helpful IT assistant. "
-                        "When a question is not directly IT-related, reinterpret it in the context of IT and provide an answer. "
-                        "Always use bullet points when useful and add clickable hyperlinks to reliable sources."
+                        "When a question is not directly IT-related, reinterpret it in the context of IT. "
+                        "Answer clearly using bullet points and clickable hyperlinks in Markdown."
                     )
                 },
                 {
                     "role": "user",
                     "content": (
                         f"The user asked: '{user_input}'. "
-                        "It's not directly IT-related, but reinterpret it in an IT context and respond accordingly."
+                        "It's not directly IT-related. Reinterpret it through the lens of IT and respond with helpful, clear information."
                     )
                 }
             ]
 
-        # Use new OpenAI v1.0+ API interface
+        # Create response using OpenAI v1.0+ interface
         client = openai.OpenAI()
         response = client.chat.completions.create(
             model="gpt-4",
@@ -63,12 +62,14 @@ def get_bot_response(user_input: str) -> str:
             temperature=0.6
         )
 
-        # Extract and return response text
-        return response.choices[0].message.content.strip()
+        # Convert Markdown to HTML for rendering
+        markdown_text = response.choices[0].message.content.strip()
+        html_response = markdown.markdown(markdown_text, extensions=['extra', 'sane_lists'])
+        return html_response
 
     except Exception as e:
         return (
-            "⚠️ Error: Something went wrong while processing your request.\n\n"
-            f"```{str(e)}```\n\n"
-            "Please try again or check your API key/config."
+            "<p><strong>⚠️ Error:</strong> Something went wrong while processing your request.</p>"
+            f"<pre>{str(e)}</pre>"
+            "<p>Please try again or check your API key/config.</p>"
         )

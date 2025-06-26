@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DigitITBot</title>
-  <link rel="stylesheet" href="/static/styles.css">
+  <title>DigiITBot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
   <div class="chat-container">
@@ -12,63 +13,80 @@
       <h1>💬 DigitITBot</h1>
       <p>Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
     </div>
-    <div id="chat-box" class="chat-box">
-      <div class="bot-message message">
+    <div class="chat-box" id="chat-box">
+      <div class="bot-message">
         <div class="avatar bot-avatar">🤖</div>
-        <div class="text">Hello! I’m <strong>DigitITBot</strong>. Ask me anything related to IT, Cloud, ITIL, ServiceNow, Networking, or Infrastructure.</div>
+        <div class="message markdown-body">
+          Hello! I’m <strong>DigitITBot</strong>. Ask me anything related to IT, Cloud, ITIL, ServiceNow, Networking, or Infrastructure.
+        </div>
       </div>
     </div>
-    <form id="chat-form" class="chat-form">
-      <input type="text" id="user-input" name="message" placeholder="Ask an IT question..." autocomplete="off" required>
+    <form id="chat-form">
+      <input type="text" id="user-input" name="user_input" placeholder="Ask an IT question..." autocomplete="off" required />
       <button type="submit">Send</button>
     </form>
   </div>
 
   <script>
-    const form = document.getElementById("chat-form");
-    const input = document.getElementById("user-input");
-    const chatBox = document.getElementById("chat-box");
+    const form = document.getElementById('chat-form');
+    const input = document.getElementById('user-input');
+    const chatBox = document.getElementById('chat-box');
 
-    function appendMessage(sender, message, isBot = false) {
-      const messageElem = document.createElement("div");
-      messageElem.className = `${isBot ? 'bot-message' : 'user-message'} message`;
+    function addMessage(sender, text) {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add(`${sender}-message`);
 
-      const avatar = document.createElement("div");
-      avatar.className = `avatar ${isBot ? 'bot-avatar' : 'user-avatar'}`;
-      avatar.textContent = isBot ? "🤖" : "👤";
+      const avatarDiv = document.createElement('div');
+      avatarDiv.classList.add('avatar', `${sender}-avatar`);
+      avatarDiv.innerHTML = sender === 'user' ? '👤' : '🤖';
 
-      const text = document.createElement("div");
-      text.className = "text";
-      text.innerHTML = message; // allows rendering HTML links
+      const contentDiv = document.createElement('div');
+      contentDiv.classList.add('message', 'markdown-body');
+      contentDiv.innerHTML = sender === 'bot' ? marked.parse(text) : text;
 
-      messageElem.appendChild(avatar);
-      messageElem.appendChild(text);
-      chatBox.appendChild(messageElem);
+      messageDiv.appendChild(avatarDiv);
+      messageDiv.appendChild(contentDiv);
+      chatBox.appendChild(messageDiv);
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    form.addEventListener("submit", async (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const message = input.value.trim();
-      if (!message) return;
+      const userInput = input.value.trim();
+      if (!userInput) return;
 
-      appendMessage("You", message, false);
-      input.value = "";
-      appendMessage("DigitITBot", "<em>Thinking...</em>", true);
+      addMessage('user', userInput);
+      input.value = '';
+      input.disabled = true;
+
+      // Add thinking placeholder
+      const thinkingDiv = document.createElement('div');
+      thinkingDiv.classList.add('bot-message');
+      thinkingDiv.innerHTML = `
+        <div class="avatar bot-avatar">🤖</div>
+        <div class="message">Thinking...</div>
+      `;
+      chatBox.appendChild(thinkingDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
 
       try {
-        const response = await fetch("/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message }),
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ user_input: userInput }),
         });
 
         const data = await response.json();
-        const botMessages = document.querySelectorAll(".bot-message .text");
-        botMessages[botMessages.length - 1].innerHTML = data.response;
+        chatBox.removeChild(thinkingDiv);
+        addMessage('bot', data.response);
       } catch (error) {
-        const botMessages = document.querySelectorAll(".bot-message .text");
-        botMessages[botMessages.length - 1].innerHTML = "Sorry, there was an error processing your request.";
+        chatBox.removeChild(thinkingDiv);
+        addMessage('bot', "⚠️ An error occurred. Please try again later.");
+      } finally {
+        input.disabled = false;
+        input.focus();
       }
     });
   </script>
