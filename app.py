@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from digititbot import get_bot_response  # ✅ Correct lowercase
+from digititbot import get_bot_response  # ✅ Make sure the file is lowercase
 import markdown
 
 app = Flask(__name__)
@@ -16,3 +16,6 @@ def chat():
         return jsonify({"response": bot_response})
     else:
         return jsonify({"error": "Unsupported Media Type"}), 415
+
+if __name__ == "__main__":
+    app.run(debug=True)
