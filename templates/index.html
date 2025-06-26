@@ -1,66 +1,76 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DigiITBot</title>
-  <link rel="stylesheet" href="/static/styles.css" />
+  <title>DigitITBot</title>
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <div class="container">
-    <h1>DigiITBot</h1>
-    <div id="chat-history" class="chat-history"></div>
-    <form id="chat-form">
-      <input type="text" id="user-input" placeholder="Ask an IT question..." required />
+  <div class="chat-container">
+    <div class="chat-header">
+      <h1>💬 DigitITBot</h1>
+      <p>Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
+    </div>
+    <div id="chat-box" class="chat-box">
+      <div class="bot-message message">
+        <div class="avatar bot-avatar">🤖</div>
+        <div class="text">Hello! I’m <strong>DigitITBot</strong>. Ask me anything related to IT, Cloud, ITIL, ServiceNow, Networking, or Infrastructure.</div>
+      </div>
+    </div>
+    <form id="chat-form" class="chat-form">
+      <input type="text" id="user-input" name="message" placeholder="Ask an IT question..." autocomplete="off" required>
       <button type="submit">Send</button>
     </form>
   </div>
 
   <script>
-    const chatForm = document.getElementById('chat-form');
-    const userInput = document.getElementById('user-input');
-    const chatHistory = document.getElementById('chat-history');
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("user-input");
+    const chatBox = document.getElementById("chat-box");
 
-    chatForm.addEventListener('submit', async (e) => {
+    function appendMessage(sender, message, isBot = false) {
+      const messageElem = document.createElement("div");
+      messageElem.className = `${isBot ? 'bot-message' : 'user-message'} message`;
+
+      const avatar = document.createElement("div");
+      avatar.className = `avatar ${isBot ? 'bot-avatar' : 'user-avatar'}`;
+      avatar.textContent = isBot ? "🤖" : "👤";
+
+      const text = document.createElement("div");
+      text.className = "text";
+      text.innerHTML = message; // allows rendering HTML links
+
+      messageElem.appendChild(avatar);
+      messageElem.appendChild(text);
+      chatBox.appendChild(messageElem);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const message = userInput.value.trim();
+      const message = input.value.trim();
       if (!message) return;
 
-      appendMessage('You', message, 'user');
-
-      const placeholder = appendMessage('DigiITBot', 'Thinking...', 'bot', true);
+      appendMessage("You", message, false);
+      input.value = "";
+      appendMessage("DigitITBot", "<em>Thinking...</em>", true);
 
       try {
-        const response = await fetch('/ask', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ message })
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
         });
 
         const data = await response.json();
-        placeholder.innerHTML = data.response;
+        const botMessages = document.querySelectorAll(".bot-message .text");
+        botMessages[botMessages.length - 1].innerHTML = data.response;
       } catch (error) {
-        placeholder.innerHTML = 'Error communicating with DigiITBot.';
+        const botMessages = document.querySelectorAll(".bot-message .text");
+        botMessages[botMessages.length - 1].innerHTML = "Sorry, there was an error processing your request.";
       }
-
-      userInput.value = '';
     });
-
-    function appendMessage(sender, message, type, isHTML = false) {
-      const bubble = document.createElement('div');
-      bubble.className = `chat-bubble ${type}`;
-      bubble.innerHTML = `<strong>${sender}:</strong> ${isHTML ? message : escapeHTML(message)}`;
-      chatHistory.appendChild(bubble);
-      chatHistory.scrollTop = chatHistory.scrollHeight;
-      return bubble;
-    }
-
-    function escapeHTML(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
   </script>
 </body>
 </html>
