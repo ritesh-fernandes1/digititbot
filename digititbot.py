@@ -12,7 +12,7 @@ ALLOWED_TOPICS = [
     "Agile Models", "Waterfall Models", "Software Programming", "Coding",
     "Micro Processors", "Servers", "On-Premise Infrastructure", "Hybrid Infrastructure",
     "Cloud Infrastructure Technology", "Virtualization", "ITIL", "ITSM", "ServiceNow",
-    "DevOps", "Problem Management", "Incident Management", "Change Management", "Networking"
+    "DevOps", "Problem Management", "Change Management", "Networking"
 ]
 
 def is_relevant_topic(user_input: str) -> bool:
@@ -20,17 +20,20 @@ def is_relevant_topic(user_input: str) -> bool:
 
 def get_bot_response(user_input: str) -> str:
     try:
+        user_input = user_input.strip()
+        if not user_input:
+            return "⚠️ Please enter a valid question related to IT, cloud, or infrastructure."
+
         messages = []
 
         if is_relevant_topic(user_input):
             messages.append({
                 "role": "system",
                 "content": (
-                    "You are DigitITBot, an expert IT assistant. "
-                    "Respond to IT-related questions clearly, using:\n"
-                    "- Bullet points where useful\n"
-                    "- Clickable hyperlinks (Markdown format)\n"
-                    "Focus on IT, infrastructure, networking, ITIL, and related domains."
+                    "You are DigitITBot, a helpful expert on IT, Cloud, Infrastructure, Networking, "
+                    "ITSM, and ServiceNow. You respond clearly and include:\n"
+                    "- Bullet points for structured answers\n"
+                    "- Clickable hyperlinks in markdown"
                 )
             })
             messages.append({"role": "user", "content": user_input})
@@ -38,33 +41,29 @@ def get_bot_response(user_input: str) -> str:
             messages.append({
                 "role": "system",
                 "content": (
-                    "You are DigitITBot, a helpful IT assistant. "
-                    "If a question is not directly IT-related, reinterpret it in an IT context "
-                    "and answer accordingly. Use:\n"
-                    "- Bullet points\n"
-                    "- Clickable Markdown links"
+                    "You are DigitITBot, an IT assistant. The user's query may not be directly IT-related. "
+                    "Reinterpret it from an IT or computing perspective and answer accordingly. Always include:\n"
+                    "- Bullet points when helpful\n"
+                    "- Clickable hyperlinks in markdown"
                 )
             })
             messages.append({
                 "role": "user",
-                "content": (
-                    f"The user asked: '{user_input}'. "
-                    "Please respond in an IT context."
-                )
+                "content": f"The user asked: '{user_input}'. Reframe and explain it in an IT context."
             })
 
         client = openai.OpenAI()
         response = client.chat.completions.create(
             model="gpt-4",
             messages=messages,
-            temperature=0.5
+            temperature=0.4
         )
 
         return response.choices[0].message.content.strip()
 
     except Exception as e:
         return (
-            "⚠️ Error: Something went wrong while processing your request.\n\n"
+            "⚠️ Error while processing your request.\n\n"
             f"```\n{str(e)}\n```\n\n"
-            "Please try again or check your API key."
+            "[Check your API key and try again](https://platform.openai.com/account/api-keys)."
         )
