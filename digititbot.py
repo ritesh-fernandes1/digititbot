@@ -1,11 +1,13 @@
 import os
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
 
+# Topics DigitITBot should handle
 ALLOWED_TOPICS = [
     "IT", "Information Technology", "Mobile Devices", "PDAs", "Tablets",
     "Computers", "Computer Networking", "Laptop Computers", "Desktop Computers",
@@ -15,55 +17,62 @@ ALLOWED_TOPICS = [
     "DevOps", "Problem Management", "Change Management", "Networking"
 ]
 
+# Check if topic is relevant
 def is_relevant_topic(user_input: str) -> bool:
     return any(topic.lower() in user_input.lower() for topic in ALLOWED_TOPICS)
 
+# Main response logic
 def get_bot_response(user_input: str) -> str:
     try:
         user_input = user_input.strip()
         if not user_input:
             return "⚠️ Please enter a valid question related to IT, cloud, or infrastructure."
 
-        messages = []
-
+        # Prepare messages based on topic
         if is_relevant_topic(user_input):
-            messages.append({
-                "role": "system",
-                "content": (
-                    "You are DigitITBot, a helpful expert on IT, Cloud, Infrastructure, Networking, "
-                    "ITSM, and ServiceNow. You respond clearly and include:\n"
-                    "- Bullet points for structured answers\n"
-                    "- Clickable hyperlinks in markdown"
-                )
-            })
-            messages.append({"role": "user", "content": user_input})
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are DigitITBot, a knowledgeable IT assistant. Answer user questions clearly and concisely.\n"
+                        "✅ Use bullet points where helpful.\n"
+                        "🔗 Always include **clickable markdown hyperlinks** to trusted IT sources like Microsoft, Cisco, AWS, etc."
+                    )
+                },
+                {"role": "user", "content": user_input}
+            ]
         else:
-            messages.append({
-                "role": "system",
-                "content": (
-                    "You are DigitITBot, an IT assistant. The user's query may not be directly IT-related. "
-                    "Reinterpret it from an IT or computing perspective and answer accordingly. Always include:\n"
-                    "- Bullet points when helpful\n"
-                    "- Clickable hyperlinks in markdown"
-                )
-            })
-            messages.append({
-                "role": "user",
-                "content": f"The user asked: '{user_input}'. Reframe and explain it in an IT context."
-            })
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are DigitITBot, a helpful IT expert bot.\n"
+                        "If the user's question is unrelated to IT, reframe it with an IT interpretation and respond.\n"
+                        "✅ Use bullet points.\n"
+                        "🔗 Always include clickable markdown-style hyperlinks when helpful."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"The user asked: '{user_input}'. It's likely not IT-related directly, "
+                        "so reinterpret the question in the context of information technology and answer accordingly."
+                    )
+                }
+            ]
 
-        client = openai.OpenAI()
+        # Call OpenAI
         response = client.chat.completions.create(
             model="gpt-4",
             messages=messages,
-            temperature=0.4
+            temperature=0.5
         )
 
         return response.choices[0].message.content.strip()
 
     except Exception as e:
         return (
-            "⚠️ Error while processing your request.\n\n"
+            "⚠️ Error: Something went wrong while processing your request.\n\n"
             f"```\n{str(e)}\n```\n\n"
-            "[Check your API key and try again](https://platform.openai.com/account/api-keys)."
+            "[Check your API key and try again.](https://platform.openai.com/account/api-keys)"
         )
