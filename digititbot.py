@@ -24,10 +24,10 @@ def get_bot_response(user_input: str) -> str:
                 {
                     "role": "system",
                     "content": (
-                        "Your name is DigitITBot. "
-                        "You are an expert IT assistant that answers questions clearly and professionally. "
-                        "Always use bullet points when listing items. Include relevant clickable hyperlinks. "
-                        "⚠️ Never refer to yourself as DigiITBot or any other name."
+                        "You are DigitITBot, an expert IT assistant. "
+                        "Answer IT-related questions clearly, using bullet points where helpful, "
+                        "and include relevant clickable hyperlinks. "
+                        "Never call yourself DigiITBot or any other variation — always say DigitITBot."
                     )
                 },
                 {"role": "user", "content": user_input}
@@ -37,18 +37,17 @@ def get_bot_response(user_input: str) -> str:
                 {
                     "role": "system",
                     "content": (
-                        "Your name is DigitITBot. "
-                        "You are a helpful IT assistant. When a question is unrelated to IT, "
-                        "reinterpret it in an IT context and respond helpfully. "
-                        "Always use bullet points and provide clickable hyperlinks. "
-                        "⚠️ Never say your name is DigiITBot."
+                        "You are DigitITBot, a helpful IT assistant. "
+                        "Reinterpret non-IT questions in an IT context. "
+                        "Provide concise answers with bullet points and clickable links. "
+                        "Never call yourself DigiITBot or any other variation — always say DigitITBot."
                     )
                 },
                 {
                     "role": "user",
                     "content": (
                         f"The user asked: '{user_input}'. "
-                        "This might not be IT-specific, so reinterpret it in an IT context."
+                        "It's not directly IT-related, so please relate it to IT and respond helpfully."
                     )
                 }
             ]
@@ -60,11 +59,12 @@ def get_bot_response(user_input: str) -> str:
             temperature=0.6
         )
 
-        raw_text = response.choices[0].message.content.strip()
+        raw_output = response.choices[0].message.content.strip()
 
-        # ✅ Force-correct any hallucinated bot name
-        clean_text = raw_text.replace("DigiITBot:", "DigitITBot:")
-        return clean_text
+        # Force correct any hallucinated bot names
+        fixed_output = raw_output.replace("DigiITBot", "DigitITBot").replace("DigiitBot", "DigitITBot")
+
+        return fixed_output
 
     except Exception as e:
         return (
