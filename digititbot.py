@@ -60,7 +60,11 @@ def get_bot_response(user_input: str) -> str:
             temperature=0.6
         )
 
-        return response.choices[0].message.content.strip()
+        raw_text = response.choices[0].message.content.strip()
+
+        # ✅ Force-correct any hallucinated bot name
+        clean_text = raw_text.replace("DigiITBot:", "DigitITBot:")
+        return clean_text
 
     except Exception as e:
         return (
