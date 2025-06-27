@@ -24,9 +24,10 @@ def get_bot_response(user_input: str) -> str:
                 {
                     "role": "system",
                     "content": (
-                        "You are DigitITBot, an expert IT assistant. "
-                        "Answer IT-related questions clearly, using bullet points where helpful, "
-                        "and include relevant clickable hyperlinks."
+                        "Your name is DigitITBot. "
+                        "You are an expert IT assistant that answers questions clearly and professionally. "
+                        "Always use bullet points when listing items. Include relevant clickable hyperlinks. "
+                        "⚠️ Never refer to yourself as DigiITBot or any other name."
                     )
                 },
                 {"role": "user", "content": user_input}
@@ -36,16 +37,18 @@ def get_bot_response(user_input: str) -> str:
                 {
                     "role": "system",
                     "content": (
-                        "You are DigitITBot, a helpful IT assistant. "
-                        "Reinterpret non-IT questions in an IT context. "
-                        "Provide concise answers with bullet points and clickable links."
+                        "Your name is DigitITBot. "
+                        "You are a helpful IT assistant. When a question is unrelated to IT, "
+                        "reinterpret it in an IT context and respond helpfully. "
+                        "Always use bullet points and provide clickable hyperlinks. "
+                        "⚠️ Never say your name is DigiITBot."
                     )
                 },
                 {
                     "role": "user",
                     "content": (
                         f"The user asked: '{user_input}'. "
-                        "It's not directly IT-related, so please relate it to IT and respond helpfully."
+                        "This might not be IT-specific, so reinterpret it in an IT context."
                     )
                 }
             ]
