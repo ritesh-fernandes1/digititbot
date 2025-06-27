@@ -2,30 +2,66 @@ import os
 import openai
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def get_bot_response(user_input):
+ALLOWED_TOPICS = [
+    "IT", "Information Technology", "Mobile Devices", "PDAs", "Tablets",
+    "Computers", "Computer Networking", "Laptop Computers", "Desktop Computers",
+    "Agile Models", "Waterfall Models", "Software Programming", "Coding",
+    "Micro Processors", "Servers", "On-Premise Infrastructure", "Hybrid Infrastructure",
+    "Cloud Infrastructure Technology", "Virtualization", "ITIL", "ITSM", "ServiceNow"
+]
+
+def is_relevant_topic(user_input: str) -> bool:
+    return any(topic.lower() in user_input.lower() for topic in ALLOWED_TOPICS)
+
+def get_bot_response(user_input: str) -> str:
     try:
-        system_message = (
-            "You are DigitITBot, an expert assistant for answering questions about Information Technology (IT), "
-            "Cloud Technology, ITIL, ITSM, ServiceNow, IT Infrastructure (on-premise, hybrid, and cloud), Virtualization, "
-            "Networking, Laptops, Desktops, Servers, Programming, and Software Engineering. "
-            "If a user asks a question outside this scope, relate the topic to IT as best as possible and provide the answer "
-            "with an IT context. Also provide helpful hyperlinks to trusted sources like Wikipedia, Microsoft, AWS, etc., when applicable. "
-            "Use bullet points where appropriate and ensure all links are clickable."
-        )
-
-        completion = openai.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": system_message},
+        if is_relevant_topic(user_input):
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are DigitITBot, an expert IT assistant. "
+                        "Answer IT-related questions clearly, using bullet points where helpful, "
+                        "and include relevant clickable hyperlinks."
+                    )
+                },
                 {"role": "user", "content": user_input}
-            ],
-            temperature=0.7
+            ]
+        else:
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are DigitITBot, a helpful IT assistant. "
+                        "Reinterpret non-IT questions in an IT context. "
+                        "Provide concise answers with bullet points and clickable links."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"The user asked: '{user_input}'. "
+                        "It's not directly IT-related, so please relate it to IT and respond helpfully."
+                    )
+                }
+            ]
+
+        client = openai.OpenAI()
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=messages,
+            temperature=0.6
         )
 
-        return completion.choices[0].message.content.strip()
+        return response.choices[0].message.content.strip()
 
     except Exception as e:
-        return f"Error: {str(e)}"
+        return (
+            "⚠️ Error: Something went wrong while processing your request.\n\n"
+            f"```{str(e)}```\n\n"
+            "Please try again or check your API key/config."
+        )
