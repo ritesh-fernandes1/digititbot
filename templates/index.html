@@ -3,45 +3,73 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DigitITBot</title>
-  <link rel="stylesheet" href="/static/styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
+  <title>DigitITBot 💻</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 <body>
-  <div class="chat-container">
-    <div class="chat-header">DigitITBot 💻</div>
-    <div class="chat-box" id="chat-box"></div>
-    <div class="input-container">
-      <input type="text" id="user-input" placeholder="Ask an IT question..." autocomplete="off"/>
-      <button onclick="sendMessage()">Send</button>
+  <div class="container">
+    <h1>💬 DigitITBot</h1>
+    <p class="subtitle">Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
+
+    <div class="chat-box" id="chat-box">
+      <div class="bot-message">🤖 Hello! I’m DigitITBot. Ask me anything related to IT, Cloud, ITIL, ServiceNow, Networking, or Infrastructure.</div>
     </div>
+
+    <form id="chat-form">
+      <input
+        type="text"
+        id="user-input"
+        placeholder="Ask an IT question..."
+        autocomplete="off"
+        required
+      />
+      <button type="submit">Send</button>
+    </form>
   </div>
 
   <script>
-    const md = window.markdownit();
+    const chatBox = document.getElementById("chat-box");
+    const chatForm = document.getElementById("chat-form");
+    const userInput = document.getElementById("user-input");
 
-    async function sendMessage() {
-      const input = document.getElementById("user-input");
-      const message = input.value.trim();
+    chatForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = userInput.value.trim();
       if (!message) return;
 
-      const chatBox = document.getElementById("chat-box");
-      chatBox.innerHTML += `<div class="user-msg"><strong>You:</strong> ${message}</div>`;
-      chatBox.innerHTML += `<div class="bot-msg"><em>DigitITBot is thinking...</em></div>`;
-      input.value = "";
-      chatBox.scrollTop = chatBox.scrollHeight;
+      // Show user message
+      const userMessage = document.createElement("div");
+      userMessage.className = "user-message";
+      userMessage.textContent = `You: ${message}`;
+      chatBox.appendChild(userMessage);
 
-      const res = await fetch("/ask", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({message})
-      });
+      // Show thinking placeholder
+      const botMessage = document.createElement("div");
+      botMessage.className = "bot-message";
+      botMessage.innerHTML = "DigitITBot is thinking...";
+      chatBox.appendChild(botMessage);
 
-      const data = await res.json();
-      const botMsgHtml = md.render(data.response || "⚠️ Error: No response.");
-      chatBox.lastChild.innerHTML = `<strong>DigitITBot:</strong><br>${botMsgHtml}`;
       chatBox.scrollTop = chatBox.scrollHeight;
-    }
+      userInput.value = "";
+
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+        });
+
+        const data = await response.json();
+        const markdownText = window.marked.parse(data.response);
+        botMessage.innerHTML = markdownText;
+      } catch (error) {
+        botMessage.textContent = "⚠️ Error: Unable to get response from DigitITBot.";
+      }
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
   </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </body>
 </html>
