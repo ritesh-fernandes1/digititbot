@@ -24,9 +24,9 @@ def get_bot_response(user_input: str) -> str:
                 {
                     "role": "system",
                     "content": (
-                        "You are DigitITBot (not DigiITBot), an expert IT assistant. "
-                        "Always refer to yourself as DigitITBot in all replies. "
-                        "Answer IT-related questions clearly, using bullet points where helpful, "
+                        "You are DigitITBot, an expert IT assistant. "
+                        "Always refer to yourself as DigitITBot. "
+                        "Answer IT-related questions clearly using bullet points when helpful, "
                         "and include relevant clickable hyperlinks."
                     )
                 },
@@ -37,17 +37,17 @@ def get_bot_response(user_input: str) -> str:
                 {
                     "role": "system",
                     "content": (
-                        "You are DigitITBot (not DigiITBot), a helpful IT assistant. "
-                        "Always use the name DigitITBot in your responses. "
+                        "You are DigitITBot, a helpful IT assistant. "
+                        "Always refer to yourself as DigitITBot. "
                         "Reinterpret non-IT questions in an IT context. "
-                        "Provide concise answers with bullet points and clickable links."
+                        "Provide clear answers with bullet points and clickable links."
                     )
                 },
                 {
                     "role": "user",
                     "content": (
                         f"The user asked: '{user_input}'. "
-                        "It's not directly IT-related, so please relate it to IT and respond helpfully."
+                        "It's not directly IT-related, so relate it to IT and respond appropriately."
                     )
                 }
             ]
@@ -59,7 +59,9 @@ def get_bot_response(user_input: str) -> str:
             temperature=0.6
         )
 
-        return response.choices[0].message.content.strip()
+        final_response = response.choices[0].message.content.strip()
+        final_response = final_response.replace("DigiITBot:", "DigitITBot:")
+        return final_response
 
     except Exception as e:
         return (
