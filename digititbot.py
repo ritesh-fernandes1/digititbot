@@ -24,10 +24,10 @@ def get_bot_response(user_input: str) -> str:
                 {
                     "role": "system",
                     "content": (
-                        "You are DigitITBot, an expert IT assistant. "
+                        "You are DigitITBot (not DigiITBot), an expert IT assistant. "
+                        "Always refer to yourself as DigitITBot in all replies. "
                         "Answer IT-related questions clearly, using bullet points where helpful, "
-                        "and include relevant clickable hyperlinks. "
-                        "Never call yourself DigiITBot or any other variation — always say DigitITBot."
+                        "and include relevant clickable hyperlinks."
                     )
                 },
                 {"role": "user", "content": user_input}
@@ -37,10 +37,10 @@ def get_bot_response(user_input: str) -> str:
                 {
                     "role": "system",
                     "content": (
-                        "You are DigitITBot, a helpful IT assistant. "
+                        "You are DigitITBot (not DigiITBot), a helpful IT assistant. "
+                        "Always use the name DigitITBot in your responses. "
                         "Reinterpret non-IT questions in an IT context. "
-                        "Provide concise answers with bullet points and clickable links. "
-                        "Never call yourself DigiITBot or any other variation — always say DigitITBot."
+                        "Provide concise answers with bullet points and clickable links."
                     )
                 },
                 {
@@ -59,12 +59,7 @@ def get_bot_response(user_input: str) -> str:
             temperature=0.6
         )
 
-        raw_output = response.choices[0].message.content.strip()
-
-        # Force correct any hallucinated bot names
-        fixed_output = raw_output.replace("DigiITBot", "DigitITBot").replace("DigiitBot", "DigitITBot")
-
-        return fixed_output
+        return response.choices[0].message.content.strip()
 
     except Exception as e:
         return (
