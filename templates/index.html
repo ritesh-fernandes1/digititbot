@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DigitITBot</title>
   <link rel="stylesheet" href="/static/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
 </head>
 <body>
   <div class="chat-container">
@@ -17,6 +18,8 @@
   </div>
 
   <script>
+    const md = window.markdownit();
+
     async function sendMessage() {
       const input = document.getElementById("user-input");
       const message = input.value.trim();
@@ -24,7 +27,7 @@
 
       const chatBox = document.getElementById("chat-box");
       chatBox.innerHTML += `<div class="user-msg"><strong>You:</strong> ${message}</div>`;
-      chatBox.innerHTML += `<div class="bot-msg"><em>DigiITBot is thinking...</em></div>`;
+      chatBox.innerHTML += `<div class="bot-msg"><em>DigitITBot is thinking...</em></div>`;
       input.value = "";
       chatBox.scrollTop = chatBox.scrollHeight;
 
@@ -35,9 +38,8 @@
       });
 
       const data = await res.json();
-      const botMsg = data.response.replace(/\n/g, "<br>");
-
-      chatBox.lastChild.innerHTML = `<strong>DigiITBot:</strong> ${botMsg}`;
+      const botMsgHtml = md.render(data.response || "⚠️ Error: No response.");
+      chatBox.lastChild.innerHTML = `<strong>DigitITBot:</strong><br>${botMsgHtml}`;
       chatBox.scrollTop = chatBox.scrollHeight;
     }
   </script>
