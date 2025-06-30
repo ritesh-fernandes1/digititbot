@@ -4,78 +4,89 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DigitITBot 💻</title>
-  <link rel="stylesheet" href="/static/style.css"/>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <div class="chat-container">
-    <h1 class="bot-header">💬 DigitITBot</h1>
-    <p class="bot-subtitle">Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
+    <header>
+      <h1>💬 DigitITBot</h1>
+      <p>Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
+    </header>
 
-    <!-- ✅ Language & Level Filters -->
-    <div class="filters">
-      <label for="language">Language:</label>
-      <select id="language">
-        <option value="">-- Optional --</option>
-        <option value="english">English</option>
-        <option value="hindi">Hindi</option>
-        <option value="spanish">Spanish</option>
-      </select>
-
-      <label for="level">Level:</label>
-      <select id="level">
-        <option value="">-- Optional --</option>
-        <option value="beginner">Beginner</option>
-        <option value="intermediate">Intermediate</option>
-        <option value="advanced">Advanced</option>
-      </select>
+    <div class="form-row">
+      <label for="fullName">👤 Enter Your Full Name:</label>
+      <input type="text" id="fullName" placeholder="e.g., John Doe" />
+      <button onclick="saveName()">Save</button>
     </div>
 
-    <div id="chat-box" class="chat-box"></div>
+    <main id="chat">
+      <div class="bot-message">🤖 Hello! I’m DigitITBot. Ask me anything related to IT, Cloud, ITIL, ServiceNow, Networking, or Infrastructure.</div>
+    </main>
 
-    <div class="input-area">
-      <input type="text" id="user-input" placeholder="Ask an IT question..." autocomplete="off" />
-      <button id="send-btn">Send</button>
-    </div>
+    <form id="chat-form">
+      <input type="text" id="message" placeholder="Ask an IT question..." required autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
   </div>
 
   <script>
-    const sendBtn = document.getElementById("send-btn");
-    const userInput = document.getElementById("user-input");
-    const chatBox = document.getElementById("chat-box");
+    const chatForm = document.getElementById("chat-form");
+    const chat = document.getElementById("chat");
+    const fullNameInput = document.getElementById("fullName");
 
-    sendBtn.addEventListener("click", async () => {
-      const message = userInput.value.trim();
-      const language = document.getElementById("language").value;
-      const level = document.getElementById("level").value;
-
-      if (message === "") return;
-
-      chatBox.innerHTML += `<div class="chat-bubble user">👤<br>${message}</div>`;
-      chatBox.innerHTML += `<div class="chat-bubble bot loading">🤖<br><em>DigitITBot is typing...</em></div>`;
-      userInput.value = "";
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      try {
-        const response = await fetch("/ask", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ message, language, level })  // ✅ Append language & level
-        });
-
-        const data = await response.json();
-        document.querySelector(".loading").remove();
-        chatBox.innerHTML += `<div class="chat-bubble bot">🤖<br>${marked.parse(data.response)}</div>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
-      } catch (err) {
-        document.querySelector(".loading").remove();
-        chatBox.innerHTML += `<div class="chat-bubble bot">⚠️<br>Error fetching response.</div>`;
+    // Load full name from localStorage if exists
+    window.onload = () => {
+      const savedName = localStorage.getItem("full_name");
+      if (savedName) {
+        fullNameInput.value = savedName;
+        sendFullNameToBackend(savedName);
       }
-    });
+    };
 
-    userInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") sendBtn.click();
+    function saveName() {
+      const fullName = fullNameInput.value.trim();
+      if (fullName) {
+        localStorage.setItem("full_name", fullName);
+        sendFullNameToBackend(fullName);
+        alert("Name saved!");
+      }
+    }
+
+    function sendFullNameToBackend(name) {
+      fetch("/setname", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ full_name: name })
+      });
+    }
+
+    chatForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = document.getElementById("message");
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
+
+      chat.innerHTML += `<div class="user-message">👤 You: ${userMessage}</div>`;
+      input.value = "";
+      chat.innerHTML += `<div class="bot-message thinking">🤖 DigitITBot is thinking...</div>`;
+      chat.scrollTop = chat.scrollHeight;
+
+      const response = await fetch("/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: userMessage })
+      });
+
+      const data = await response.json();
+      const messages = document.querySelectorAll(".thinking");
+      messages.forEach((el) => el.remove());
+
+      chat.innerHTML += `<div class="bot-message">🤖 ${marked.parse(data.response)}</div>`;
+      chat.scrollTop = chat.scrollHeight;
     });
   </script>
 
