@@ -1,100 +1,110 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>DigitITBot 💻</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>💬 DigitITBot</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script>
+    // Toggle light/dark mode
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute("data-theme");
+      document.documentElement.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+    }
+  </script>
 </head>
 <body>
-    <main class="chat-container">
-        <h1>💬 DigitITBot</h1>
-        <p class="description">Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
+  <div class="chat-container">
+    <h1>💬 DigitITBot</h1>
+    <p>Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
 
-        <div id="userForm" class="user-form">
-            <label for="fullName">👤 Enter Your Full Name: </label>
-            <input type="text" id="fullName" placeholder="Your Full Name" />
-            <button onclick="saveName()">Save</button>
-        </div>
+    <div class="name-entry">
+      <label for="full-name">👤 Enter Your Full Name: </label>
+      <input type="text" id="full-name" placeholder="e.g., Ritesh Fernandes" />
+      <button onclick="saveName()">Save</button>
+    </div>
 
-        <div id="chatBox" class="chat-box">
-            <div class="message bot">
-                <strong>🤖 DigitITBot:</strong> Hello! I’m DigitITBot. Ask me anything related to IT, Cloud, ITIL, ServiceNow, Networking, or Infrastructure.
-            </div>
-        </div>
+    <div class="filters">
+      <select id="lang-filter">
+        <option value="">🌐 All Languages</option>
+        <option value="English">English</option>
+        <option value="Hindi">Hindi</option>
+        <option value="Kannada">Kannada</option>
+      </select>
 
-        <div class="input-container">
-            <input type="text" id="userInput" placeholder="Ask an IT question..." />
-            <button onclick="sendMessage()">Send</button>
-        </div>
-    </main>
+      <select id="quality-filter">
+        <option value="">📺 All Levels</option>
+        <option value="Beginner">Beginner</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="Expert">Expert</option>
+      </select>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        const chatBox = document.getElementById("chatBox");
-        const userInput = document.getElementById("userInput");
-        const fullNameInput = document.getElementById("fullName");
+      <button onclick="toggleTheme()">🌓 Toggle Theme</button>
+    </div>
 
-        function saveName() {
-            const name = fullNameInput.value.trim();
-            if (name) {
-                localStorage.setItem("fullName", name);
-                alert("Name Saved");
-            } else {
-                alert("Please enter a valid name.");
-            }
-        }
+    <div id="chat-box"></div>
 
-        function appendMessage(role, message) {
-            const messageContainer = document.createElement("div");
-            messageContainer.classList.add("message", role);
+    <form id="chat-form">
+      <input type="text" id="user-input" placeholder="Ask an IT question..." required />
+      <button type="submit">Send</button>
+    </form>
+  </div>
 
-            const savedName = localStorage.getItem("fullName") || "You";
-            const label = role === "user" ? `👤 ${savedName}` : "🤖 DigitITBot";
+  <script>
+    async function saveName() {
+      const name = document.getElementById("full-name").value.trim();
+      if (!name) return alert("Please enter your full name.");
+      await fetch("/save-name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ full_name: name })
+      });
+      localStorage.setItem("user_name", name);
+      alert("Name Saved");
+    }
 
-            const labelElem = document.createElement("strong");
-            labelElem.textContent = label + ": ";
-            messageContainer.appendChild(labelElem);
+    async function sendMessage(message) {
+      const chatBox = document.getElementById("chat-box");
+      const userName = localStorage.getItem("user_name") || "You";
+      const lang = document.getElementById("lang-filter").value;
+      const quality = document.getElementById("quality-filter").value;
 
-            const markdownText = marked.parse(message);
-            const markdownElem = document.createElement("span");
-            markdownElem.innerHTML = markdownText;
-            messageContainer.appendChild(markdownElem);
+      const userMsg = `<div class="user-msg"><strong>👤 ${userName}:</strong> ${message}</div>`;
+      chatBox.innerHTML += userMsg;
 
-            chatBox.appendChild(messageContainer);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+      const thinking = document.createElement("div");
+      thinking.className = "bot-msg";
+      thinking.innerHTML = `<strong>🤖 DigitITBot:</strong> ⌛ Thinking...`;
+      chatBox.appendChild(thinking);
+      chatBox.scrollTop = chatBox.scrollHeight;
 
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            if (!message) return;
-
-            appendMessage("user", message);
-            userInput.value = "";
-
-            appendMessage("bot", "⌛ Thinking...");
-
-            try {
-                const response = await fetch("/ask", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message }),
-                });
-
-                const data = await response.json();
-                const botMessages = document.querySelectorAll(".message.bot");
-                const lastBotMessage = botMessages[botMessages.length - 1];
-                lastBotMessage.remove();
-                appendMessage("bot", data.response);
-            } catch (error) {
-                appendMessage("bot", "⚠️ Error: Could not connect to DigitITBot.");
-            }
-        }
-
-        // Allow Enter key to send message
-        userInput.addEventListener("keypress", function (e) {
-            if (e.key === "Enter") sendMessage();
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message,
+            language: lang,
+            level: quality
+          })
         });
-    </script>
+        const data = await res.json();
+        thinking.innerHTML = `<strong>🤖 DigitITBot:</strong> ${marked.parse(data.response)}`;
+      } catch {
+        thinking.innerHTML = `<strong>🤖 DigitITBot:</strong> ⚠️ Error: Could not connect to DigitITBot.`;
+      }
+    }
+
+    document.getElementById("chat-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("user-input");
+      if (input.value.trim()) {
+        sendMessage(input.value.trim());
+        input.value = "";
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </body>
 </html>

@@ -2,7 +2,6 @@ import os
 import openai
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -17,7 +16,7 @@ ALLOWED_TOPICS = [
 def is_relevant_topic(user_input: str) -> bool:
     return any(topic.lower() in user_input.lower() for topic in ALLOWED_TOPICS)
 
-def get_bot_response(user_input: str) -> str:
+def get_bot_response(user_input: str, user_name: str = "You") -> str:
     try:
         if is_relevant_topic(user_input):
             messages = [
@@ -25,8 +24,8 @@ def get_bot_response(user_input: str) -> str:
                     "role": "system",
                     "content": (
                         "You are DigitITBot, an expert IT assistant. "
-                        "Answer IT-related questions clearly, using bullet points where helpful, "
-                        "and include relevant clickable hyperlinks."
+                        "Always answer with bullet points where helpful, and include clickable hyperlinks. "
+                        f"The user's name is {user_name}."
                     )
                 },
                 {"role": "user", "content": user_input}
@@ -37,15 +36,16 @@ def get_bot_response(user_input: str) -> str:
                     "role": "system",
                     "content": (
                         "You are DigitITBot, a helpful IT assistant. "
-                        "Reinterpret non-IT questions in an IT context. "
-                        "Provide concise answers with bullet points and clickable links."
+                        "Reinterpret unrelated questions in the context of IT. "
+                        "Always include bullet points and clickable links. "
+                        f"The user's name is {user_name}."
                     )
                 },
                 {
                     "role": "user",
                     "content": (
                         f"The user asked: '{user_input}'. "
-                        "It's not directly IT-related, so please relate it to IT and respond helpfully."
+                        "It's not directly IT-related. Reinterpret and explain in IT terms."
                     )
                 }
             ]

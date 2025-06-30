@@ -1,40 +1,35 @@
 from flask import Flask, render_template, request, jsonify, session
 from digititbot import get_bot_response
-import os
 from dotenv import load_dotenv
+import os
 
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY")
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback-secret")
 
 @app.route("/")
-def home():
+def index():
     return render_template("index.html")
 
-@app.route("/set-name", methods=["POST"])
-def set_name():
-    if request.is_json:
-        data = request.get_json()
-        name = data.get("fullName", "").strip()
-        if name:
-            session["full_name"] = name
-            return jsonify({"message": "Name saved successfully."})
-        return jsonify({"error": "No name provided"}), 400
-    return jsonify({"error": "Unsupported Media Type"}), 415
+@app.route("/save-name", methods=["POST"])
+def save_name():
+    data = request.get_json()
+    full_name = data.get("full_name", "User")
+    session["user_name"] = full_name
+    return jsonify({"message": "Name saved!"})
 
 @app.route("/chat", methods=["POST"])
 def chat():
     if request.is_json:
         data = request.get_json()
         user_input = data.get("message", "")
-        full_name = session.get("full_name", "You")
-        bot_response = get_bot_response(user_input)
-        return jsonify({
-            "response": bot_response,
-            "name": full_name
-        })
-    return jsonify({"error": "Unsupported Media Type"}), 415
+        user_name = session.get("user_name", "You")
+        bot_response = get_bot_response(user_input, user_name)
+        return jsonify({"response": bot_response})
+    else:
+        return jsonify({"error": "Unsupported Media Type"}), 415
 
 if __name__ == "__main__":
     app.run(debug=True, port=5050)
