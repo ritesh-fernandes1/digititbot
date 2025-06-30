@@ -1,132 +1,102 @@
+/* Base layout */
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f5f5f5;
   margin: 0;
   padding: 0;
-  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
-[data-theme='dark'] body {
-  background-color: #1e1e1e;
-  color: #e0e0e0;
+/* Define themes */
+body[data-theme="light"] {
+  --user-color: #003366;
+  --bot-color: #006400;
+  --text-color: #000000;
+  --background-color: #ffffff;
 }
 
-.chat-container {
-  max-width: 800px;
-  margin: auto;
+body[data-theme="dark"] {
+  --user-color: #aad6ff;
+  --bot-color: #a4f9c8;
+  --text-color: #ffffff;
+  --background-color: #121212;
+}
+
+/* Container layout */
+#chat-container {
+  max-width: 720px;
+  margin: 0 auto;
   padding: 20px;
 }
 
-h1 {
-  text-align: center;
-  color: #2c3e50;
+/* Message styles */
+.message {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 16px;
+  line-height: 1.6;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-[data-theme='dark'] h1 {
-  color: #f2f2f2;
-}
-
-.chat-box {
-  border: 1px solid #ccc;
-  padding: 10px;
-  height: 400px;
-  overflow-y: auto;
-  background-color: #ffffff;
-  margin-bottom: 10px;
-  border-radius: 5px;
-}
-
-[data-theme='dark'] .chat-box {
-  background-color: #2a2a2a;
-  border-color: #444;
-}
-
-.user-message {
+.message.user {
   text-align: right;
-  color: #007bff;
-  font-size: 14pt;
-  margin: 8px 0;
+  color: var(--user-color);
 }
 
-.bot-message {
+.message.bot {
   text-align: left;
-  color: #009688;
-  font-size: 14pt;
-  margin: 8px 0;
+  color: var(--bot-color);
 }
 
-input[type="text"] {
-  width: 80%;
+/* Input area */
+#input-area {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+input[type="text"], select {
   padding: 10px;
-  font-size: 14pt;
+  font-size: 16px;
+  border-radius: 6px;
   border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-[data-theme='dark'] input[type="text"] {
-  background-color: #333;
-  color: #fff;
-  border-color: #555;
+  flex: 1;
 }
 
 button {
-  padding: 10px 20px;
-  font-size: 14pt;
-  background-color: #007bff;
-  color: white;
+  padding: 10px 16px;
+  font-size: 16px;
+  background-color: #0066cc;
+  color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: #004d99;
 }
 
-/* === Dropdown Filter Styles (Appended) === */
-.filters {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  font-size: 14pt;
+/* Accessibility + readability */
+label, h1 {
+  font-size: 18px;
+  margin-bottom: 8px;
 }
 
-.filters label {
-  font-weight: bold;
-  color: var(--text-color);
+select {
+  background-color: #f0f0f0;
+  color: #333;
 }
 
-.filters select {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  background-color: var(--input-bg);
-  color: var(--text-color);
-  font-size: 14pt;
-  outline: none;
-}
+/* Responsive */
+@media (max-width: 600px) {
+  #input-area {
+    flex-direction: column;
+  }
 
-.filters select:focus {
-  border-color: var(--accent-color);
-  box-shadow: 0 0 0 2px var(--accent-color-light);
-}
-
-/* === Light Theme Variables === */
-html[data-theme="light"] {
-  --text-color: #222;
-  --border-color: #ccc;
-  --input-bg: #fff;
-  --accent-color: #2a6cdf;
-  --accent-color-light: rgba(42, 108, 223, 0.3);
-}
-
-/* === Dark Theme Variables === */
-html[data-theme="dark"] {
-  --text-color: #eee;
-  --border-color: #555;
-  --input-bg: #1a1a1a;
-  --accent-color: #2a8fff;
-  --accent-color-light: rgba(42, 143, 255, 0.3);
+  button {
+    width: 100%;
+  }
 }

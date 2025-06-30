@@ -17,17 +17,15 @@ ALLOWED_TOPICS = [
 def is_relevant_topic(user_input: str) -> bool:
     return any(topic.lower() in user_input.lower() for topic in ALLOWED_TOPICS)
 
-def get_bot_response(user_input: str, full_name: str = "") -> str:
+def get_bot_response(user_input: str) -> str:
     try:
-        greeting = f" You are assisting a user named {full_name}." if full_name else ""
-
         if is_relevant_topic(user_input):
             messages = [
                 {
                     "role": "system",
                     "content": (
-                        "You are DigitITBot, an expert IT assistant."
-                        f"{greeting} Answer IT-related questions clearly, using bullet points where helpful, "
+                        "You are DigitITBot, an expert IT assistant. "
+                        "Answer IT-related questions clearly, using bullet points where helpful, "
                         "and include relevant clickable hyperlinks."
                     )
                 },
@@ -38,8 +36,8 @@ def get_bot_response(user_input: str, full_name: str = "") -> str:
                 {
                     "role": "system",
                     "content": (
-                        "You are DigitITBot, a helpful IT assistant."
-                        f"{greeting} Reinterpret non-IT questions in an IT context. "
+                        "You are DigitITBot, a helpful IT assistant. "
+                        "Reinterpret non-IT questions in an IT context. "
                         "Provide concise answers with bullet points and clickable links."
                     )
                 },

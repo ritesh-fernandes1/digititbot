@@ -1,95 +1,100 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DigitITBot 💻</title>
-  <link rel="stylesheet" href="/static/style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>DigitITBot 💻</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 <body>
-  <div class="chat-container">
-    <header>
-      <h1>💬 DigitITBot</h1>
-      <p>Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
-    </header>
+    <main class="chat-container">
+        <h1>💬 DigitITBot</h1>
+        <p class="description">Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
 
-    <div class="form-row">
-      <label for="fullName">👤 Enter Your Full Name:</label>
-      <input type="text" id="fullName" placeholder="e.g., John Doe" />
-      <button onclick="saveName()">Save</button>
-    </div>
+        <div id="userForm" class="user-form">
+            <label for="fullName">👤 Enter Your Full Name: </label>
+            <input type="text" id="fullName" placeholder="Your Full Name" />
+            <button onclick="saveName()">Save</button>
+        </div>
 
-    <main id="chat">
-      <div class="bot-message">🤖 Hello! I’m DigitITBot. Ask me anything related to IT, Cloud, ITIL, ServiceNow, Networking, or Infrastructure.</div>
+        <div id="chatBox" class="chat-box">
+            <div class="message bot">
+                <strong>🤖 DigitITBot:</strong> Hello! I’m DigitITBot. Ask me anything related to IT, Cloud, ITIL, ServiceNow, Networking, or Infrastructure.
+            </div>
+        </div>
+
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="Ask an IT question..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
     </main>
 
-    <form id="chat-form">
-      <input type="text" id="message" placeholder="Ask an IT question..." required autocomplete="off" />
-      <button type="submit">Send</button>
-    </form>
-  </div>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        const chatBox = document.getElementById("chatBox");
+        const userInput = document.getElementById("userInput");
+        const fullNameInput = document.getElementById("fullName");
 
-  <script>
-    const chatForm = document.getElementById("chat-form");
-    const chat = document.getElementById("chat");
-    const fullNameInput = document.getElementById("fullName");
+        function saveName() {
+            const name = fullNameInput.value.trim();
+            if (name) {
+                localStorage.setItem("fullName", name);
+                alert("Name Saved");
+            } else {
+                alert("Please enter a valid name.");
+            }
+        }
 
-    // Load full name from localStorage if exists
-    window.onload = () => {
-      const savedName = localStorage.getItem("full_name");
-      if (savedName) {
-        fullNameInput.value = savedName;
-        sendFullNameToBackend(savedName);
-      }
-    };
+        function appendMessage(role, message) {
+            const messageContainer = document.createElement("div");
+            messageContainer.classList.add("message", role);
 
-    function saveName() {
-      const fullName = fullNameInput.value.trim();
-      if (fullName) {
-        localStorage.setItem("full_name", fullName);
-        sendFullNameToBackend(fullName);
-        alert("Name saved!");
-      }
-    }
+            const savedName = localStorage.getItem("fullName") || "You";
+            const label = role === "user" ? `👤 ${savedName}` : "🤖 DigitITBot";
 
-    function sendFullNameToBackend(name) {
-      fetch("/setname", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ full_name: name })
-      });
-    }
+            const labelElem = document.createElement("strong");
+            labelElem.textContent = label + ": ";
+            messageContainer.appendChild(labelElem);
 
-    chatForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const input = document.getElementById("message");
-      const userMessage = input.value.trim();
-      if (!userMessage) return;
+            const markdownText = marked.parse(message);
+            const markdownElem = document.createElement("span");
+            markdownElem.innerHTML = markdownText;
+            messageContainer.appendChild(markdownElem);
 
-      chat.innerHTML += `<div class="user-message">👤 You: ${userMessage}</div>`;
-      input.value = "";
-      chat.innerHTML += `<div class="bot-message thinking">🤖 DigitITBot is thinking...</div>`;
-      chat.scrollTop = chat.scrollHeight;
+            chatBox.appendChild(messageContainer);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
 
-      const response = await fetch("/ask", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ message: userMessage })
-      });
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
 
-      const data = await response.json();
-      const messages = document.querySelectorAll(".thinking");
-      messages.forEach((el) => el.remove());
+            appendMessage("user", message);
+            userInput.value = "";
 
-      chat.innerHTML += `<div class="bot-message">🤖 ${marked.parse(data.response)}</div>`;
-      chat.scrollTop = chat.scrollHeight;
-    });
-  </script>
+            appendMessage("bot", "⌛ Thinking...");
 
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+            try {
+                const response = await fetch("/ask", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message }),
+                });
+
+                const data = await response.json();
+                const botMessages = document.querySelectorAll(".message.bot");
+                const lastBotMessage = botMessages[botMessages.length - 1];
+                lastBotMessage.remove();
+                appendMessage("bot", data.response);
+            } catch (error) {
+                appendMessage("bot", "⚠️ Error: Could not connect to DigitITBot.");
+            }
+        }
+
+        // Allow Enter key to send message
+        userInput.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") sendMessage();
+        });
+    </script>
 </body>
 </html>
