@@ -1,72 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DigitITBot 💻</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="stylesheet" href="/static/style.css"/>
 </head>
 <body>
-  <div class="container">
-    <h1>💬 DigitITBot</h1>
-    <p class="subtitle">Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
+  <div class="chat-container">
+    <h1 class="bot-header">💬 DigitITBot</h1>
+    <p class="bot-subtitle">Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
 
-    <div class="chat-box" id="chat-box">
-      <div class="bot-message">🤖 Hello! I’m DigitITBot. Ask me anything related to IT, Cloud, ITIL, ServiceNow, Networking, or Infrastructure.</div>
+    <!-- ✅ Language & Level Filters -->
+    <div class="filters">
+      <label for="language">Language:</label>
+      <select id="language">
+        <option value="">-- Optional --</option>
+        <option value="english">English</option>
+        <option value="hindi">Hindi</option>
+        <option value="spanish">Spanish</option>
+      </select>
+
+      <label for="level">Level:</label>
+      <select id="level">
+        <option value="">-- Optional --</option>
+        <option value="beginner">Beginner</option>
+        <option value="intermediate">Intermediate</option>
+        <option value="advanced">Advanced</option>
+      </select>
     </div>
 
-    <form id="chat-form">
-      <input
-        type="text"
-        id="user-input"
-        placeholder="Ask an IT question..."
-        autocomplete="off"
-        required
-      />
-      <button type="submit">Send</button>
-    </form>
+    <div id="chat-box" class="chat-box"></div>
+
+    <div class="input-area">
+      <input type="text" id="user-input" placeholder="Ask an IT question..." autocomplete="off" />
+      <button id="send-btn">Send</button>
+    </div>
   </div>
 
   <script>
-    const chatBox = document.getElementById("chat-box");
-    const chatForm = document.getElementById("chat-form");
+    const sendBtn = document.getElementById("send-btn");
     const userInput = document.getElementById("user-input");
+    const chatBox = document.getElementById("chat-box");
 
-    chatForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    sendBtn.addEventListener("click", async () => {
       const message = userInput.value.trim();
-      if (!message) return;
+      const language = document.getElementById("language").value;
+      const level = document.getElementById("level").value;
 
-      // Show user message
-      const userMessage = document.createElement("div");
-      userMessage.className = "user-message";
-      userMessage.textContent = `You: ${message}`;
-      chatBox.appendChild(userMessage);
+      if (message === "") return;
 
-      // Show thinking placeholder
-      const botMessage = document.createElement("div");
-      botMessage.className = "bot-message";
-      botMessage.innerHTML = "DigitITBot is thinking...";
-      chatBox.appendChild(botMessage);
-
-      chatBox.scrollTop = chatBox.scrollHeight;
+      chatBox.innerHTML += `<div class="chat-bubble user">👤<br>${message}</div>`;
+      chatBox.innerHTML += `<div class="chat-bubble bot loading">🤖<br><em>DigitITBot is typing...</em></div>`;
       userInput.value = "";
+      chatBox.scrollTop = chatBox.scrollHeight;
 
       try {
         const response = await fetch("/ask", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message }),
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message, language, level })  // ✅ Append language & level
         });
 
         const data = await response.json();
-        const markdownText = window.marked.parse(data.response);
-        botMessage.innerHTML = markdownText;
-      } catch (error) {
-        botMessage.textContent = "⚠️ Error: Unable to get response from DigitITBot.";
+        document.querySelector(".loading").remove();
+        chatBox.innerHTML += `<div class="chat-bubble bot">🤖<br>${marked.parse(data.response)}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (err) {
+        document.querySelector(".loading").remove();
+        chatBox.innerHTML += `<div class="chat-bubble bot">⚠️<br>Error fetching response.</div>`;
       }
+    });
 
-      chatBox.scrollTop = chatBox.scrollHeight;
+    userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendBtn.click();
     });
   </script>
 

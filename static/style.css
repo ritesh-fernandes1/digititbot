@@ -1,46 +1,132 @@
-/* === Accessibility Enhancements === */
-
-/* Font size and base text */
 body {
   font-family: Arial, sans-serif;
-  font-size: 15pt;
-  line-height: 1.6;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 0;
+  color: #333;
 }
 
-/* Theme variables for light mode */
-:root {
-  --text-color: #1a1a1a;
-  --background-color: #ffffff;
-  --user-text-color: #0b5394;  /* Dark blue */
-  --bot-text-color: #38761d;   /* Dark green */
+[data-theme='dark'] body {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
 }
 
-/* Theme variables for dark mode */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text-color: #eaeaea;
-    --background-color: #121212;
-    --user-text-color: #6fa8dc;  /* Light blue */
-    --bot-text-color: #93c47d;   /* Light green */
-  }
+.chat-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
 }
 
-/* Apply text color globally */
-body {
-  color: var(--text-color);
-  background-color: var(--background-color);
+h1 {
+  text-align: center;
+  color: #2c3e50;
 }
 
-/* Style user message */
+[data-theme='dark'] h1 {
+  color: #f2f2f2;
+}
+
+.chat-box {
+  border: 1px solid #ccc;
+  padding: 10px;
+  height: 400px;
+  overflow-y: auto;
+  background-color: #ffffff;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+[data-theme='dark'] .chat-box {
+  background-color: #2a2a2a;
+  border-color: #444;
+}
+
 .user-message {
-  color: var(--user-text-color);
-  font-weight: 600;
-  margin-bottom: 0.4em;
+  text-align: right;
+  color: #007bff;
+  font-size: 14pt;
+  margin: 8px 0;
 }
 
-/* Style bot message */
 .bot-message {
-  color: var(--bot-text-color);
-  font-weight: 500;
-  margin-bottom: 1.2em;
+  text-align: left;
+  color: #009688;
+  font-size: 14pt;
+  margin: 8px 0;
+}
+
+input[type="text"] {
+  width: 80%;
+  padding: 10px;
+  font-size: 14pt;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+[data-theme='dark'] input[type="text"] {
+  background-color: #333;
+  color: #fff;
+  border-color: #555;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 14pt;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* === Dropdown Filter Styles (Appended) === */
+.filters {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  font-size: 14pt;
+}
+
+.filters label {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.filters select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  font-size: 14pt;
+  outline: none;
+}
+
+.filters select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px var(--accent-color-light);
+}
+
+/* === Light Theme Variables === */
+html[data-theme="light"] {
+  --text-color: #222;
+  --border-color: #ccc;
+  --input-bg: #fff;
+  --accent-color: #2a6cdf;
+  --accent-color-light: rgba(42, 108, 223, 0.3);
+}
+
+/* === Dark Theme Variables === */
+html[data-theme="dark"] {
+  --text-color: #eee;
+  --border-color: #555;
+  --input-bg: #1a1a1a;
+  --accent-color: #2a8fff;
+  --accent-color-light: rgba(42, 143, 255, 0.3);
 }
