@@ -9,118 +9,128 @@
 <body>
   <div class="container">
     <h1>💬 DigitITBot</h1>
-    <p>Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
+    <p class="subtitle">Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
 
     <!-- Full Name Input -->
-    <label for="fullName">👤 Enter Your Full Name:</label>
-    <input type="text" id="fullName" placeholder="Your Full Name" />
-    <button onclick="saveName()">Save</button>
+    <div class="input-row">
+      <label for="fullName">👤 Enter Your Full Name:</label>
+      <input type="text" id="fullName" placeholder="e.g., Ritesh Fernandes" />
+      <button onclick="saveName()">Save</button>
+    </div>
 
-    <!-- Language Filter -->
-    <label for="languageFilter">🌐 Preferred Language:</label>
-    <select id="languageFilter">
-      <option value="">Any</option>
-      <option value="en">English</option>
-      <option value="hi">Hindi</option>
-      <option value="es">Spanish</option>
-    </select>
+    <!-- Language Dropdown -->
+    <div class="dropdown-row">
+      <label for="languageSelect">🌐 Tutorial Language</label>
+      <select id="languageSelect">
+        <option value="">All Languages</option>
+        <option value="English">English</option>
+        <option value="Hindi">Hindi</option>
+        <option value="Spanish">Spanish</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+      </select>
+    </div>
 
-    <!-- Tutorial Level Filter -->
-    <label for="levelFilter">🎯 Tutorial Level:</label>
-    <select id="levelFilter">
-      <option value="">Any</option>
-      <option value="beginner">Beginner</option>
-      <option value="intermediate">Intermediate</option>
-      <option value="advanced">Advanced</option>
-    </select>
+    <!-- Level Dropdown -->
+    <div class="dropdown-row">
+      <label for="levelSelect">📺 Tutorial Level</label>
+      <select id="levelSelect">
+        <option value="">All Levels</option>
+        <option value="Beginner">Beginner</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="Advanced">Advanced</option>
+      </select>
+    </div>
 
     <!-- Programming Language Dropdown -->
-    <label for="programmingLanguage">💻 Programming Language:</label>
-    <select id="programmingLanguage">
-      <option value="">None</option>
-      <option value="python">Python</option>
-      <option value="javascript">JavaScript</option>
-      <option value="java">Java</option>
-      <option value="c++">C++</option>
-      <option value="c#">C#</option>
-      <option value="go">Go</option>
-      <option value="ruby">Ruby</option>
-      <option value="php">PHP</option>
-      <option value="typescript">TypeScript</option>
-    </select>
+    <div class="dropdown-row">
+      <label for="programmingSelect">👨‍💻 Programming Language</label>
+      <select id="programmingSelect">
+        <option value="">All Languages</option>
+        <option value="Python">Python</option>
+        <option value="JavaScript">JavaScript</option>
+        <option value="Java">Java</option>
+        <option value="C++">C++</option>
+        <option value="C#">C#</option>
+        <option value="Go">Go</option>
+        <option value="Ruby">Ruby</option>
+        <option value="PHP">PHP</option>
+        <option value="Swift">Swift</option>
+        <option value="TypeScript">TypeScript</option>
+      </select>
+    </div>
 
-    <div id="chatBox" class="chat-box"></div>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
 
-    <div class="input-area">
-      <input type="text" id="userInput" placeholder="Ask an IT question..." />
+    <!-- Chat Box -->
+    <div id="chat-box" class="chat-box"></div>
+
+    <!-- Message Input -->
+    <div class="input-row">
+      <input type="text" id="user-input" placeholder="Ask an IT question..." />
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
 
   <script>
-    const nameKey = "digititbot_user_name";
+    let fullName = localStorage.getItem("fullName") || "";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (fullName) {
+        document.getElementById("fullName").value = fullName;
+      }
+    });
 
     function saveName() {
-      const name = document.getElementById("fullName").value.trim();
-      if (name) {
-        localStorage.setItem(nameKey, name);
-        alert("✅ Name Saved");
-      }
+      fullName = document.getElementById("fullName").value.trim();
+      localStorage.setItem("fullName", fullName);
+      alert("Name Saved");
     }
 
-    function sendMessage() {
-      const userInput = document.getElementById("userInput").value.trim();
-      const userName = localStorage.getItem(nameKey) || "You";
-      const language = document.getElementById("languageFilter").value;
-      const level = document.getElementById("levelFilter").value;
-      const languageCode = language || "";
-      const programmingLanguage = document.getElementById("programmingLanguage").value;
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value.trim();
+      if (!message) return;
 
-      if (!userInput) return;
+      const language = document.getElementById("languageSelect").value;
+      const level = document.getElementById("levelSelect").value;
+      const programming = document.getElementById("programmingSelect").value;
 
-      const chatBox = document.getElementById("chatBox");
-      const userBubble = `<div class="chat user"><strong>👤 ${userName}:</strong> ${userInput}</div>`;
-      const botThinking = `<div class="chat bot thinking" id="thinking">⌛ Thinking...</div>`;
-
-      chatBox.innerHTML += userBubble + botThinking;
-      document.getElementById("userInput").value = "";
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML += `<div class="user-message"><strong>👤 ${fullName || 'You'}:</strong> ${message}</div>`;
+      chatBox.innerHTML += `<div class="bot-message"><strong>🤖 DigitITBot:</strong> ⌛ Thinking...</div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      fetch("/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: userInput,
-          user_name: userName,
-          language: languageCode,
-          level: level,
-          programming_language: programmingLanguage
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("thinking").remove();
-        const botReply = `<div class="chat bot"><strong>🤖 DigitITBot:</strong> ${data.response}</div>`;
-        chatBox.innerHTML += botReply;
+      input.value = "";
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: message,
+            full_name: fullName,
+            tutorial_language: language,
+            tutorial_level: level,
+            programming_language: programming
+          })
+        });
+        const data = await res.json();
+        document.querySelectorAll(".bot-message").pop().remove();
+        chatBox.innerHTML += `<div class="bot-message"><strong>🤖 DigitITBot:</strong> ${marked.parse(data.response)}</div>`;
         chatBox.scrollTop = chatBox.scrollHeight;
-      })
-      .catch(err => {
-        document.getElementById("thinking").remove();
-        const errorReply = `<div class="chat bot error">⚠️ Error: Could not connect to DigitITBot.</div>`;
-        chatBox.innerHTML += errorReply;
-        chatBox.scrollTop = chatBox.scrollHeight;
-      });
+      } catch (err) {
+        console.error(err);
+        chatBox.innerHTML += `<div class="bot-message error">⚠️ Error: Could not connect to DigitITBot.</div>`;
+      }
     }
 
-    // Pre-fill name from localStorage
-    window.onload = () => {
-      const savedName = localStorage.getItem(nameKey);
-      if (savedName) {
-        document.getElementById("fullName").value = savedName;
-      }
-    };
+    function toggleTheme() {
+      document.body.classList.toggle("dark-mode");
+    }
   </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </body>
 </html>
