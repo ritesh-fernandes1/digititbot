@@ -4,133 +4,126 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DigitITBot 💬</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body>
+<body class="light-mode">
   <div class="container">
     <h1>💬 DigitITBot</h1>
-    <p class="subtitle">Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
+    <p>Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
 
-    <!-- Full Name Input -->
-    <div class="input-row">
+    <div class="input-section">
       <label for="fullName">👤 Enter Your Full Name:</label>
       <input type="text" id="fullName" placeholder="e.g., Ritesh Fernandes" />
       <button onclick="saveName()">Save</button>
     </div>
 
-    <!-- Language Dropdown -->
-    <div class="dropdown-row">
-      <label for="languageSelect">🌐 Tutorial Language</label>
-      <select id="languageSelect">
-        <option value="">All Languages</option>
-        <option value="English">English</option>
-        <option value="Hindi">Hindi</option>
-        <option value="Spanish">Spanish</option>
-        <option value="French">French</option>
-        <option value="German">German</option>
+    <div class="dropdowns">
+      <select id="language">
+        <option selected>🌐 All Languages</option>
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
       </select>
-    </div>
 
-    <!-- Level Dropdown -->
-    <div class="dropdown-row">
-      <label for="levelSelect">📺 Tutorial Level</label>
-      <select id="levelSelect">
-        <option value="">All Levels</option>
+      <select id="level">
+        <option selected>📺 All Levels</option>
         <option value="Beginner">Beginner</option>
         <option value="Intermediate">Intermediate</option>
         <option value="Advanced">Advanced</option>
       </select>
-    </div>
 
-    <!-- Programming Language Dropdown -->
-    <div class="dropdown-row">
-      <label for="programmingSelect">👨‍💻 Programming Language</label>
-      <select id="programmingSelect">
-        <option value="">All Languages</option>
+      <select id="programming">
+        <option selected>💻 Programming Language</option>
         <option value="Python">Python</option>
         <option value="JavaScript">JavaScript</option>
         <option value="Java">Java</option>
         <option value="C++">C++</option>
-        <option value="C#">C#</option>
         <option value="Go">Go</option>
-        <option value="Ruby">Ruby</option>
-        <option value="PHP">PHP</option>
-        <option value="Swift">Swift</option>
-        <option value="TypeScript">TypeScript</option>
+        <option value="None">None</option>
       </select>
+
+      <button id="toggleTheme">🌓 Toggle Theme</button>
     </div>
 
-    <!-- Theme Toggle -->
-    <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+    <div class="chat-window" id="chatWindow"></div>
 
-    <!-- Chat Box -->
-    <div id="chat-box" class="chat-box"></div>
-
-    <!-- Message Input -->
-    <div class="input-row">
-      <input type="text" id="user-input" placeholder="Ask an IT question..." />
+    <div class="input-box">
+      <input
+        type="text"
+        id="userInput"
+        placeholder="Ask an IT question..."
+        onkeydown="handleKey(event)"
+      />
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
 
   <script>
-    let fullName = localStorage.getItem("fullName") || "";
-
-    document.addEventListener("DOMContentLoaded", () => {
-      if (fullName) {
-        document.getElementById("fullName").value = fullName;
-      }
-    });
+    let savedName = localStorage.getItem("fullName") || "";
 
     function saveName() {
-      fullName = document.getElementById("fullName").value.trim();
-      localStorage.setItem("fullName", fullName);
-      alert("Name Saved");
-    }
-
-    async function sendMessage() {
-      const input = document.getElementById("user-input");
-      const message = input.value.trim();
-      if (!message) return;
-
-      const language = document.getElementById("languageSelect").value;
-      const level = document.getElementById("levelSelect").value;
-      const programming = document.getElementById("programmingSelect").value;
-
-      const chatBox = document.getElementById("chat-box");
-      chatBox.innerHTML += `<div class="user-message"><strong>👤 ${fullName || 'You'}:</strong> ${message}</div>`;
-      chatBox.innerHTML += `<div class="bot-message"><strong>🤖 DigitITBot:</strong> ⌛ Thinking...</div>`;
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      input.value = "";
-
-      try {
-        const res = await fetch("/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: message,
-            full_name: fullName,
-            tutorial_language: language,
-            tutorial_level: level,
-            programming_language: programming
-          })
-        });
-        const data = await res.json();
-        document.querySelectorAll(".bot-message").pop().remove();
-        chatBox.innerHTML += `<div class="bot-message"><strong>🤖 DigitITBot:</strong> ${marked.parse(data.response)}</div>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
-      } catch (err) {
-        console.error(err);
-        chatBox.innerHTML += `<div class="bot-message error">⚠️ Error: Could not connect to DigitITBot.</div>`;
+      const input = document.getElementById("fullName").value.trim();
+      if (input) {
+        savedName = input;
+        localStorage.setItem("fullName", savedName);
+        alert("✅ Name Saved");
       }
     }
 
-    function toggleTheme() {
-      document.body.classList.toggle("dark-mode");
+    function handleKey(event) {
+      if (event.key === "Enter") sendMessage();
     }
-  </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    function sendMessage() {
+      const userInput = document.getElementById("userInput").value;
+      const chatWindow = document.getElementById("chatWindow");
+      const language = document.getElementById("language").value;
+      const level = document.getElementById("level").value;
+      const programming = document.getElementById("programming").value;
+
+      if (!userInput.trim()) return;
+
+      const userLabel = savedName || "You";
+
+      chatWindow.innerHTML += `
+        <div class="chat-bubble user"><strong>👤 ${userLabel}:</strong> ${userInput}</div>
+        <div class="chat-bubble bot"><strong>🤖 ${BOT_NAME}:</strong> ⌛ Thinking...</div>
+      `;
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+
+      fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userInput,
+          name: savedName,
+          language,
+          level,
+          programming
+        }),
+      })
+        .then(res => res.text())
+        .then(data => {
+          const botResponses = document.querySelectorAll(".chat-bubble.bot");
+          botResponses[botResponses.length - 1].innerHTML = `<strong>🤖 ${BOT_NAME}:</strong> ${data}`;
+          chatWindow.scrollTop = chatWindow.scrollHeight;
+        })
+        .catch(() => {
+          const botResponses = document.querySelectorAll(".chat-bubble.bot");
+          botResponses[botResponses.length - 1].innerHTML = `<strong>🤖 ${BOT_NAME}:</strong> ⚠️ Error: Could not connect to DigitITBot.`;
+        });
+
+      document.getElementById("userInput").value = "";
+    }
+
+    const themeBtn = document.getElementById("toggleTheme");
+    themeBtn.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+      document.body.classList.toggle("light-mode");
+    });
+
+    const BOT_NAME = "{{ bot_name }}";
+  </script>
 </body>
 </html>

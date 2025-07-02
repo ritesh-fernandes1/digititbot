@@ -1,116 +1,81 @@
 import os
-import openai
 import requests
+import markdown
 from dotenv import load_dotenv
+from openai import OpenAI
 
-# Load environment variables
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 BOT_NAME = os.getenv("BOT_NAME", "DigitITBot")
 
-ALLOWED_TOPICS = [
-    "IT", "Information Technology", "Mobile Devices", "PDAs", "Tablets",
-    "Computers", "Computer Networking", "Laptop Computers", "Desktop Computers",
-    "Agile Models", "Waterfall Models", "Software Programming", "Coding",
-    "Micro Processors", "Servers", "On-Premise Infrastructure", "Hybrid Infrastructure",
-    "Cloud Infrastructure Technology", "Virtualization", "ITIL", "ITSM", "ServiceNow"
-]
+# In-memory history log (demo purpose only)
+user_video_history = {}
 
-def is_relevant_topic(user_input: str) -> bool:
-    return any(topic.lower() in user_input.lower() for topic in ALLOWED_TOPICS)
+def fetch_youtube_videos(query, language=None, level=None, max_results=3):
+    search_url = "https://www.googleapis.com/youtube/v3/search"
+    params = {
+        "part": "snippet",
+        "q": query,
+        "type": "video",
+        "key": YOUTUBE_API_KEY,
+        "maxResults": max_results,
+        "safeSearch": "strict"
+    }
 
-def search_youtube(query: str, language="", level=""):
+    if language and language != "All Languages":
+        params["relevanceLanguage"] = language
+
+    response = requests.get(search_url, params=params)
+    if response.status_code != 200:
+        return ["⚠️ Could not fetch video suggestions."]
+
+    videos = response.json().get("items", [])
+    results = []
+    for video in videos:
+        title = video["snippet"]["title"]
+        video_id = video["id"]["videoId"]
+        video_url = f"https://www.youtube.com/watch?v={video_id}"
+        if level and level != "All Levels":
+            if level.lower() not in title.lower():
+                continue
+        results.append(f"[{title}]({video_url})")
+
+    return results if results else ["❗ No suitable video tutorials found."]
+
+def get_bot_response(user_input, user_name="User", language=None, level=None, programming_language=None):
+    name_tag = f"{user_name.strip()}" if user_name else "User"
+
+    system_prompt = (
+        f"You are {BOT_NAME}, a helpful IT assistant. "
+        f"You specialize in IT, Cloud, ITIL, ServiceNow, DevOps, Networking, Hybrid Infrastructure, Devices, "
+        f"and Programming. Provide URLs when helpful. If the question relates to coding, explain clearly with examples."
+    )
+
+    if programming_language and programming_language != "None":
+        user_input = f"{user_input} (Please answer using {programming_language})"
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_input}
+    ]
+
     try:
-        base_url = "https://www.googleapis.com/youtube/v3/search"
-        params = {
-            "part": "snippet",
-            "q": f"{query} tutorial {language} {level}".strip(),
-            "key": YOUTUBE_API_KEY,
-            "type": "video",
-            "maxResults": 3
-        }
-
-        response = requests.get(base_url, params=params)
-        data = response.json()
-
-        videos = []
-        for item in data.get("items", []):
-            title = item["snippet"]["title"]
-            video_id = item["id"]["videoId"]
-            url = f"https://www.youtube.com/watch?v={video_id}"
-            videos.append(f"[{title}]({url})")
-
-        if videos:
-            return "\n\n**📺 Recommended Video Tutorials:**\n" + "\n".join(videos)
-        else:
-            return "\n\n❗No videos found matching your criteria."
-
-    except Exception as e:
-        return f"\n\n⚠️ Could not fetch YouTube videos: `{str(e)}`"
-
-def get_bot_response(user_input, user_name="User", language="", level="", programming_language=""):
-    try:
-        query_context = ""
-        if language:
-            query_context += f"\nPreferred Language: {language}."
-        if level:
-            query_context += f"\nTutorial Level: {level}."
-        if programming_language:
-            query_context += f"\nProgramming Language: {programming_language}."
-
-        if is_relevant_topic(user_input) or programming_language:
-            messages = [
-                {
-                    "role": "system",
-                    "content": (
-                        f"You are {BOT_NAME}, a professional IT assistant. "
-                        "Answer all questions in natural tone with helpful detail. "
-                        "Use bullet points where needed. Add hyperlinks where applicable. "
-                        "Respect language preference and tutorial level. "
-                        "If programming is involved, tailor the explanation accordingly."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": f"{user_name} asked: {user_input}{query_context}"
-                }
-            ]
-        else:
-            messages = [
-                {
-                    "role": "system",
-                    "content": (
-                        f"You are {BOT_NAME}, a professional IT assistant. "
-                        "The user has asked something that may not be directly IT-related. "
-                        "Please interpret it within the context of IT and respond with helpful insight."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": f"{user_name} asked: {user_input}{query_context}"
-                }
-            ]
-
-        client = openai.OpenAI()
         response = client.chat.completions.create(
             model="gpt-4",
             messages=messages,
             temperature=0.6
         )
-
         bot_reply = response.choices[0].message.content.strip()
 
-        # Check if it's a tutorial request
-        if "tutorial" in user_input.lower() or "video" in user_input.lower() or "learn" in user_input.lower():
-            youtube_suggestions = search_youtube(user_input, language, level)
-            bot_reply += youtube_suggestions
+        if "tutorial" in user_input.lower() or "video" in user_input.lower():
+            yt_videos = fetch_youtube_videos(user_input, language, level)
+            user_video_history.setdefault(name_tag, []).extend(yt_videos)
+            bot_reply += "\n\n📺 **YouTube Tutorials to get started:**\n" + "\n".join(yt_videos)
 
-        return bot_reply
+        return markdown.markdown(bot_reply)
 
     except Exception as e:
-        return (
-            f"⚠️ Error: Something went wrong while processing your request.\n\n"
-            f"```{str(e)}```\n\n"
-            "Please try again or check your API keys."
-        )
+        print(f"❌ Error in get_bot_response: {str(e)}")
+        return "⚠️ Error: Could not connect to DigitITBot."
