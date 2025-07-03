@@ -1,15 +1,11 @@
-from flask import Flask, render_template, request, jsonify, Response, stream_with_context
-from digititbot import get_bot_response_stream
-from flask_cors import CORS
-from dotenv import load_dotenv
-import os
 
-load_dotenv()
+from flask import Flask, request, jsonify, render_template, Response, stream_with_context
+from flask_cors import CORS
+from digititbot import get_streaming_response
+import os
 
 app = Flask(__name__)
 CORS(app)
-
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "defaultsecret")
 
 @app.route("/")
 def index():
@@ -17,18 +13,13 @@ def index():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.json
-    user_input = data.get("message")
-    user_name = data.get("userName")
-    language = data.get("language")
-    level = data.get("level")
-    topic = data.get("topic")
+    data = request.get_json()
+    user_input = data.get("message", "")
+    user_name = data.get("name", "")
+    language = data.get("language", "")
 
     def generate():
-        try:
-            for token in get_bot_response_stream(user_input, user_name, language, level, topic):
-                yield token
-        except Exception as e:
-            yield f"\n⚠️ Error: {str(e)}"
+        for chunk in get_streaming_response(user_input, user_name, language):
+            yield f"data: {chunk}\n\n"
 
-    return Response(stream_with_context(generate()), mimetype="text/plain")
+    return Response(stream_with_context(generate()), mimetype="text/event-stream")
