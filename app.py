@@ -1,8 +1,6 @@
-
-from flask import Flask, request, jsonify, render_template, Response, stream_with_context
+from flask import Flask, render_template, request, Response, stream_with_context
 from flask_cors import CORS
 from digititbot import get_streaming_response
-import os
 
 app = Flask(__name__)
 CORS(app)
@@ -23,3 +21,6 @@ def chat():
             yield f"data: {chunk}\n\n"
 
     return Response(stream_with_context(generate()), mimetype="text/event-stream")
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5050)

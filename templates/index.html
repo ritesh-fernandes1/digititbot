@@ -3,111 +3,121 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>💬 DigitITBot</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>DigitITBot</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-  <main>
+  <div class="container">
     <h1>💬 DigitITBot</h1>
-    <p>Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
+    <p class="subtitle">Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
 
-    <label for="fullName">👤 Enter Your Full Name:</label>
-    <input type="text" id="fullName" placeholder="e.g., Ritesh Fernandes">
-    <button onclick="saveName()">Save</button>
+    <!-- Name Input -->
+    <form id="name-form">
+      <label for="name">👤 Enter Your Full Name:</label>
+      <input type="text" id="name" placeholder="e.g., Ritesh Fernandes" />
+      <button type="submit">Save</button>
+      <button type="button" class="toggle-theme" id="theme-toggle">🌓 Toggle Theme</button>
+    </form>
 
-    <div class="filters">
-      <select id="languageFilter">
-        <option value="">🌐 All Languages</option>
-        <option value="english">English</option>
-        <option value="hindi">Hindi</option>
-        <option value="spanish">Spanish</option>
+    <!-- Programming Language Filter -->
+    <form id="language-form">
+      <label for="language">🌐 Programming Language:</label>
+      <select id="language">
+        <option value="All">All</option>
+        <option value="Python">Python</option>
+        <option value="JavaScript">JavaScript</option>
+        <option value="Java">Java</option>
+        <option value="C++">C++</option>
+        <option value="HTML/CSS">HTML/CSS</option>
       </select>
+    </form>
 
-      <select id="levelFilter">
-        <option value="">📺 All Levels</option>
-        <option value="beginner">Beginner</option>
-        <option value="intermediate">Intermediate</option>
-        <option value="advanced">Advanced</option>
-      </select>
+    <!-- Chat Box -->
+    <div class="chat-box" id="chat-box"></div>
+    <p id="typing"></p>
 
-      <select id="codeLanguage">
-        <option value="">💻 Any Language</option>
-        <option value="python">Python</option>
-        <option value="java">Java</option>
-        <option value="csharp">C#</option>
-        <option value="javascript">JavaScript</option>
-        <option value="c">C</option>
-        <option value="c++">C++</option>
-        <option value="go">Go</option>
-        <option value="bash">Bash</option>
-      </select>
-    </div>
-
-    <div id="chatbox"></div>
-
-    <input type="text" id="userInput" placeholder="Ask an IT question...">
-    <button onclick="sendMessage()">Send</button>
-    <button onclick="toggleTheme()">🌓 Toggle Theme</button>
-  </main>
+    <!-- Message Input -->
+    <form id="chat-form">
+      <input type="text" id="message" placeholder="Ask an IT question..." autocomplete="off"/>
+      <button type="submit">Send</button>
+    </form>
+  </div>
 
   <script>
-    let fullName = localStorage.getItem("fullName") || "";
+    const chatBox = document.getElementById("chat-box");
+    const chatForm = document.getElementById("chat-form");
+    const messageInput = document.getElementById("message");
+    const nameInput = document.getElementById("name");
+    const nameForm = document.getElementById("name-form");
+    const languageSelect = document.getElementById("language");
+    const typingIndicator = document.getElementById("typing");
 
-    function saveName() {
-      const input = document.getElementById("fullName").value.trim();
-      if (input) {
-        fullName = input;
-        localStorage.setItem("fullName", input);
-        alert("Name saved!");
-      }
+    // Restore theme preference
+    if (localStorage.getItem("theme") === "dark") {
+      document.body.classList.add("dark");
     }
 
-    function toggleTheme() {
-      document.body.classList.toggle("dark-mode");
-    }
+    // Dark mode toggle
+    document.getElementById("theme-toggle").onclick = () => {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    };
 
-    function appendMessage(sender, message) {
-      const chatbox = document.getElementById("chatbox");
-      const msgDiv = document.createElement("div");
-      msgDiv.className = sender;
-      msgDiv.textContent = message;
-      chatbox.appendChild(msgDiv);
-      chatbox.scrollTop = chatbox.scrollHeight;
-    }
+    // Restore saved name
+    nameInput.value = localStorage.getItem("userName") || "";
 
-    async function sendMessage() {
-      const userInput = document.getElementById("userInput");
-      const message = userInput.value.trim();
+    // Save name
+    nameForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      localStorage.setItem("userName", nameInput.value);
+      alert("Name saved!");
+    });
+
+    // Send message
+    chatForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = messageInput.value.trim();
       if (!message) return;
 
-      const language = document.getElementById("languageFilter").value;
-      const level = document.getElementById("levelFilter").value;
-      const codeLanguage = document.getElementById("codeLanguage").value;
+      const userName = nameInput.value || "User";
+      const language = languageSelect.value;
 
-      appendMessage("user", `👤 ${fullName || "You"}: ${message}`);
-      appendMessage("bot", "🤖 DigitITBot: ⌛ Thinking...");
+      appendMessage("user", userName, message);
+      messageInput.value = "";
+      typingIndicator.textContent = "🤖 DigitITBot is typing...";
 
-      const res = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message,
-          name: fullName,
-          language,
-          level,
-          code_language: codeLanguage
-        })
-      });
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message, name: userName, language })
+        });
 
-      const { response } = await res.json();
-      document.querySelectorAll(".bot").slice(-1)[0].textContent = `🤖 DigitITBot: ${response}`;
-      userInput.value = "";
+        const data = await response.json();
+        appendMarkdownMessage("bot", "DigitITBot", data.response);
+      } catch (err) {
+        appendMessage("bot", "DigitITBot", "⚠️ Error: Could not connect to DigitITBot.");
+      } finally {
+        typingIndicator.textContent = "";
+      }
+    });
+
+    function appendMessage(sender, name, text) {
+      const msg = document.createElement("div");
+      msg.classList.add(sender === "user" ? "user-bubble" : "bot-bubble");
+      msg.innerHTML = `<strong>${sender === "user" ? "👤" : "🤖"} ${name}:</strong> ${text}`;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // Auto-fill saved name if available
-    window.onload = () => {
-      if (fullName) document.getElementById("fullName").value = fullName;
-    };
+    function appendMarkdownMessage(sender, name, markdownText) {
+      const msg = document.createElement("div");
+      msg.classList.add(sender === "user" ? "user-bubble" : "bot-bubble");
+      msg.innerHTML = `<strong>${sender === "user" ? "👤" : "🤖"} ${name}:</strong><br>${marked.parse(markdownText)}`;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
   </script>
 </body>
 </html>
