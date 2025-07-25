@@ -4,4 +4,4 @@ openai==1.93.0
 python-dotenv==1.0.1
 gunicorn==23.0.0
 markdown==3.6
-awsgi==0.3.2
+awsgi==0.0.5
