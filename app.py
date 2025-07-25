@@ -8,8 +8,8 @@ import openai
 if os.environ.get("RENDER") != "true":
     load_dotenv()
 
-# ✅ Set OpenAI API key from environment
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# ✅ Initialize OpenAI client for v1.0+
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # ✅ Initialize Flask app
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -41,13 +41,14 @@ def chat():
             {"role": "user", "content": f"{user_msg} (Programming Language: {language})"}
         ]
 
-        completion = openai.ChatCompletion.create(
+        # ✅ New OpenAI SDK v1.0+ call
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=chat_messages,
             temperature=0.7,
         )
 
-        bot_reply = completion.choices[0].message.content
+        bot_reply = response.choices[0].message.content
         return jsonify({"response": bot_reply})
 
     except Exception as e:
