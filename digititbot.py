@@ -25,8 +25,8 @@ def get_streaming_response(user_input: str, user_name: str, language: str):
                     "role": "system",
                     "content": (
                         f"You are DigitITBot, a highly skilled IT assistant for {user_name}. "
-                        "Answer all IT questions precisely. Include bullet points, and hyperlinks when needed. "
-                        f"Filter results based on '{language}' if applicable."
+                        "Answer all IT questions precisely. Use bullet points, embed relevant hyperlinks, "
+                        f"and prioritize information relevant to '{language}' where appropriate."
                     )
                 },
                 {"role": "user", "content": user_input}
@@ -37,19 +37,20 @@ def get_streaming_response(user_input: str, user_name: str, language: str):
                     "role": "system",
                     "content": (
                         f"You are DigitITBot, a helpful IT assistant for {user_name}. "
-                        "Reframe non-IT queries in an IT context. Include bullet points and links. "
-                        f"Prioritize answers based on '{language}' if relevant."
+                        "Reframe unrelated questions in an IT context. Use bullet points and links when helpful. "
+                        f"Prioritize answers based on '{language}' if applicable."
                     )
                 },
                 {
                     "role": "user",
                     "content": (
-                        f"The user asked: '{user_input}', which isn’t clearly IT. "
-                        "Reinterpret it in an IT context and answer accordingly."
+                        f"The user asked: '{user_input}', which is not clearly IT-related. "
+                        "Please interpret it in an IT context and respond accordingly."
                     )
                 }
             ]
 
+        # Stream GPT-4o response
         stream = client.chat.completions.create(
             model="gpt-4o",
             messages=messages,
@@ -58,8 +59,9 @@ def get_streaming_response(user_input: str, user_name: str, language: str):
         )
 
         for chunk in stream:
-            if chunk.choices[0].delta.content:
-                yield chunk.choices[0].delta.content
+            delta = chunk.choices[0].delta
+            if hasattr(delta, "content") and delta.content:
+                yield delta.content
 
     except Exception as e:
         yield f"⚠️ Error: {str(e)}"

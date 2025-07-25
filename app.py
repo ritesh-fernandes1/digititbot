@@ -1,37 +1,30 @@
 import os
-from flask import Flask, render_template, request, Response, stream_with_context
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 import openai
-import json
-import time
-import awsgi
 
-# ✅ Load .env ONLY when running locally, not on Render
+# ✅ Load .env ONLY locally (not on Render)
 if os.environ.get("RENDER") != "true":
     load_dotenv()
 
+# ✅ Set OpenAI API key from environment
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# ✅ Initialize Flask app
 app = Flask(__name__, static_folder='static', template_folder='templates')
-CORS(app)  # ✅ Allow CORS for frontend fetch
+CORS(app)  # Enable CORS for frontend access
 
+# ✅ Route: Home page
 @app.route("/")
 def index():
     return render_template("index.html")
 
+# ✅ Route: POST /chat - handle incoming question
 @app.route("/chat", methods=["POST"])
 def chat():
-    return Response(generate_streamed_response(request), mimetype='text/event-stream')
-
-# ✅ Simple healthcheck route for deployment debugging
-@app.route("/healthcheck", methods=["GET"])
-def healthcheck():
-    return "✅ DigitITBot backend is healthy!", 200
-
-def generate_streamed_response(req):
     try:
-        data = req.get_json()
+        data = request.get_json()
         user_msg = data.get("message", "")
         user_name = data.get("name", "User")
         language = data.get("language", "All")
@@ -48,26 +41,23 @@ def generate_streamed_response(req):
             {"role": "user", "content": f"{user_msg} (Programming Language: {language})"}
         ]
 
-        response = openai.ChatCompletion.create(
+        completion = openai.ChatCompletion.create(
             model="gpt-4",
             messages=chat_messages,
-            stream=True,
             temperature=0.7,
         )
 
-        for chunk in response:
-            if "choices" in chunk and len(chunk["choices"]) > 0:
-                delta = chunk["choices"][0]["delta"]
-                if "content" in delta:
-                    yield f"data: {delta['content']}\n\n"
+        bot_reply = completion.choices[0].message.content
+        return jsonify({"response": bot_reply})
 
     except Exception as e:
-        yield f"data: ⚠️ Error: {str(e)}\n\n"
+        return jsonify({"response": f"⚠️ Error: {str(e)}"}), 500
 
-# For AWS Lambda or Render
-def lambda_handler(event, context):
-    return awsgi.response(app, event, context)
+# ✅ Route: Healthcheck for Render diagnostics
+@app.route("/healthcheck", methods=["GET"])
+def healthcheck():
+    return "✅ DigitITBot backend is healthy!", 200
 
-# For local development
+# ✅ Local development only
 if __name__ == "__main__":
     app.run(debug=True, port=5050)
