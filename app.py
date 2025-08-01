@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 import openai
@@ -19,16 +19,6 @@ CORS(app)  # Enable CORS for frontend access
 @app.route("/")
 def index():
     return render_template("index.html")
-
-# ✅ Route: Serve robots.txt from root
-@app.route("/robots.txt")
-def robots_txt():
-    return send_from_directory(app.static_folder, "robots.txt")
-
-# ✅ Route: Serve sitemap.xml from root
-@app.route("/sitemap.xml")
-def sitemap_xml():
-    return send_from_directory(app.static_folder, "sitemap.xml")
 
 # ✅ Route: POST /chat - handle incoming question
 @app.route("/chat", methods=["POST"])
@@ -68,6 +58,11 @@ def chat():
 @app.route("/healthcheck", methods=["GET"])
 def healthcheck():
     return "✅ DigitITBot backend is healthy!", 200
+
+# ✅ Route: Google Search Console Verification
+@app.route("/googlee310f7381f724126.html")
+def google_verification():
+    return app.send_static_file("googlee310f7381f724126.html")
 
 # ✅ Local development only
 if __name__ == "__main__":
