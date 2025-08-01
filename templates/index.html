@@ -3,14 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DigitITBot</title>
+  <title>DigitITBot - Free AI Assistant for ITIL, ITSM, ServiceNow & Cloud</title>
+
+  <!-- ✅ SEO Meta Tags -->
+  <meta name="description" content="DigitITBot is your AI-powered IT assistant for ITIL, ServiceNow, Cloud Infrastructure, Networking, and DevOps. Ask IT questions and get instant answers with trusted references.">
+  <meta name="keywords" content="DigitITBot, ITIL, ITSM, ServiceNow, Cloud Infrastructure, DevOps, AI Assistant for IT, Hybrid Infrastructure, Networking Support, IT Chatbot">
+  <meta name="author" content="Ritesh Fernandes">
+
+  <!-- ✅ Open Graph for Social Sharing -->
+  <meta property="og:title" content="DigitITBot - Your AI Assistant for ITIL, Cloud & ServiceNow">
+  <meta property="og:description" content="Get ITIL, ServiceNow, Cloud, Networking & DevOps support with DigitITBot, your free AI-powered IT assistant.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://digititbot.onrender.com">
+  <meta property="og:image" content="https://digititbot.onrender.com/static/digititbot-banner.png">
+
+  <!-- ✅ Google Search Console Verification -->
+  <meta name="google-site-verification" content="YOUR_GOOGLE_VERIFICATION_CODE_HERE" />
+
+  <!-- ✅ Structured Data for Google -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "DigitITBot",
+    "url": "https://digititbot.onrender.com",
+    "applicationCategory": "AI Assistant",
+    "description": "DigitITBot is a free AI-powered assistant for ITIL, ITSM, ServiceNow, Cloud, and DevOps.",
+    "author": {
+      "@type": "Person",
+      "name": "Ritesh Fernandes"
+    },
+    "operatingSystem": "Web",
+    "softwareVersion": "3.0.0"
+  }
+  </script>
+
   <link rel="stylesheet" href="/static/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
   <div class="container">
-    <h1>💬 DigitITBot</h1>
-    <p class="subtitle">Your IT assistant for everything infrastructure, cloud, ITIL & more.</p>
+    <h1>💬 DigitITBot - Your Free AI IT Assistant</h1>
+    <p class="subtitle">Get instant help with ITIL, ServiceNow, Cloud Infrastructure, Networking, and DevOps.</p>
 
     <!-- Name Input -->
     <form id="name-form">
@@ -33,6 +67,18 @@
       </select>
     </form>
 
+    <!-- SEO Content Section -->
+    <section>
+      <h2>Why Choose DigitITBot?</h2>
+      <p>DigitITBot is designed to empower IT professionals with:</p>
+      <ul>
+        <li>✔ Quick answers to ITIL, ITSM, and ServiceNow questions</li>
+        <li>✔ Trusted references and hyperlinks for deeper learning</li>
+        <li>✔ Support for Cloud, Hybrid Infrastructure, and Networking</li>
+        <li>✔ AI-powered coding assistance in Python, Java, and more</li>
+      </ul>
+    </section>
+
     <!-- Chat Box -->
     <div class="chat-box" id="chat-box"></div>
     <p id="typing"></p>
@@ -53,28 +99,23 @@
     const languageSelect = document.getElementById("language");
     const typingIndicator = document.getElementById("typing");
 
-    // Restore theme preference
     if (localStorage.getItem("theme") === "dark") {
       document.body.classList.add("dark");
     }
 
-    // Toggle theme
     document.getElementById("theme-toggle").onclick = () => {
       document.body.classList.toggle("dark");
       localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
     };
 
-    // Restore saved name
     nameInput.value = localStorage.getItem("userName") || "";
 
-    // Save name
     nameForm.addEventListener("submit", (e) => {
       e.preventDefault();
       localStorage.setItem("userName", nameInput.value);
       alert("Name saved!");
     });
 
-    // Submit chat message (non-streaming)
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const message = messageInput.value.trim();
