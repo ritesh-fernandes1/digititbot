@@ -64,6 +64,11 @@ def healthcheck():
 def google_verification():
     return app.send_static_file("googlee310f7381f724126.html")
 
+# ✅ Route: Sitemap for Google Search Console
+@app.route("/sitemap.xml")
+def sitemap():
+    return app.send_static_file("sitemap.xml")
+
 # ✅ Local development only
 if __name__ == "__main__":
     app.run(debug=True, port=5050)
