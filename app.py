@@ -69,6 +69,11 @@ def google_verification():
 def sitemap():
     return app.send_static_file("sitemap.xml")
 
+# ✅ Route: Robots.txt for crawlers
+@app.route("/robots.txt")
+def robots():
+    return app.send_static_file("robots.txt")
+
 # ✅ Local development only
 if __name__ == "__main__":
     app.run(debug=True, port=5050)
