@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, jsonify, Response
 from flask_cors import CORS
 from dotenv import load_dotenv
 import openai
+from datetime import datetime
 
 # ✅ Load .env ONLY locally (not on Render)
 if os.environ.get("RENDER") != "true":
@@ -64,12 +65,25 @@ def healthcheck():
 def google_verification():
     return app.send_static_file("googlee310f7381f724126.html")
 
-# ✅ Route: Sitemap with correct Content-Type
+# ✅ Route: Dynamic Sitemap with current date
 @app.route("/sitemap.xml")
 def sitemap():
-    sitemap_path = os.path.join(app.static_folder, "sitemap.xml")
-    with open(sitemap_path, "r") as f:
-        sitemap_content = f.read()
+    today = datetime.utcnow().date().isoformat()
+    sitemap_content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://digititbot.onrender.com/</loc>
+    <lastmod>{today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://digititbot.onrender.com/healthcheck</loc>
+    <lastmod>{today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>"""
     return Response(sitemap_content, mimetype="application/xml")
 
 # ✅ Route: Robots.txt for crawlers
