@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 from flask_cors import CORS
 from dotenv import load_dotenv
 import openai
@@ -64,15 +64,21 @@ def healthcheck():
 def google_verification():
     return app.send_static_file("googlee310f7381f724126.html")
 
-# ✅ Route: Sitemap for Google Search Console
+# ✅ Route: Sitemap with correct Content-Type
 @app.route("/sitemap.xml")
 def sitemap():
-    return app.send_static_file("sitemap.xml")
+    sitemap_path = os.path.join(app.static_folder, "sitemap.xml")
+    with open(sitemap_path, "r") as f:
+        sitemap_content = f.read()
+    return Response(sitemap_content, mimetype="application/xml")
 
 # ✅ Route: Robots.txt for crawlers
 @app.route("/robots.txt")
 def robots():
-    return app.send_static_file("robots.txt")
+    robots_path = os.path.join(app.static_folder, "robots.txt")
+    with open(robots_path, "r") as f:
+        robots_content = f.read()
+    return Response(robots_content, mimetype="text/plain")
 
 # ✅ Local development only
 if __name__ == "__main__":
