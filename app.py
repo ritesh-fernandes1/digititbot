@@ -1,6 +1,6 @@
 # app.py
 from flask import Flask, render_template, request, jsonify
-from digititbot.py import chat_with_gpt, generate_quiz_questions
+from digititbot import chat_with_gpt, generate_quiz_questions  # Fixed import
 
 app = Flask(__name__)
 
@@ -45,10 +45,18 @@ def quiz_submit():
             score += 1
             feedback.append({"question": q["question"], "correct": True})
         else:
-            feedback.append({"question": q["question"], "correct": False, "correct_answer": correct})
+            feedback.append({
+                "question": q["question"],
+                "correct": False,
+                "correct_answer": correct
+            })
 
     return jsonify({"score": score, "total": len(questions), "feedback": feedback})
 
+@app.route("/ping", methods=["GET"])
+def ping():
+    """Health check endpoint for Render or monitoring services"""
+    return jsonify({"status": "ok"}), 200
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
