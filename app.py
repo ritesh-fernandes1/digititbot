@@ -1,117 +1,54 @@
-import os
-from datetime import datetime
-from flask import Flask, render_template, request, jsonify, Response
-from flask_cors import CORS
-from dotenv import load_dotenv
-import openai
+# app.py
+from flask import Flask, render_template, request, jsonify
+from digititbot.py import chat_with_gpt, generate_quiz_questions
 
-# ✅ Load .env ONLY locally (not on Render)
-if os.environ.get("RENDER") != "true":
-    load_dotenv()
+app = Flask(__name__)
 
-# ✅ Initialize OpenAI client for v1.0+
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# ✅ Initialize Flask app
-app = Flask(__name__, static_folder='static', template_folder='templates')
-CORS(app)  # Enable CORS for frontend access
-
-
-# ✅ Route: Home page
 @app.route("/")
-def index():
+def home():
     return render_template("index.html")
 
-
-# ✅ Route: POST /chat - handle incoming question
 @app.route("/chat", methods=["POST"])
 def chat():
-    try:
-        data = request.get_json()
-        user_msg = data.get("message", "")
-        user_name = data.get("name", "User")
-        language = data.get("language", "All")
+    data = request.json
+    message = data.get("message", "")
+    name = data.get("name", "User")
+    language = data.get("language", "All")
 
-        system_prompt = (
-            "You are DigitITBot, an expert IT assistant. You provide concise, practical answers "
-            "related to IT, cloud infrastructure, networking, ServiceNow, virtualization, coding, "
-            "ITIL, ITSM, DevOps, and hybrid environments. Include useful bullet points and trusted hyperlinks in your answers. "
-            "If the question is ambiguous, interpret it in an IT context."
-        )
+    response = chat_with_gpt(message, user_name=name, language=language)
+    return jsonify({"response": response})
 
-        chat_messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"{user_msg} (Programming Language: {language})"}
-        ]
+@app.route("/quiz/start", methods=["POST"])
+def quiz_start():
+    """Start quiz session with GPT-generated questions"""
+    data = request.json
+    topic = data.get("topic", "ITIL")
+    num_questions = int(data.get("num_questions", 5))
 
-        # ✅ New OpenAI SDK v1.0+ call
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=chat_messages,
-            temperature=0.7,
-        )
+    quiz_questions = generate_quiz_questions(topic=topic, num_questions=num_questions)
+    return jsonify({"questions": quiz_questions})
 
-        bot_reply = response.choices[0].message.content
-        return jsonify({"response": bot_reply})
+@app.route("/quiz/submit", methods=["POST"])
+def quiz_submit():
+    """Score the quiz"""
+    data = request.json
+    answers = data.get("answers", [])
+    questions = data.get("questions", [])
 
-    except Exception as e:
-        return jsonify({"response": f"⚠️ Error: {str(e)}"}), 500
+    score = 0
+    feedback = []
 
+    for i, q in enumerate(questions):
+        correct = q.get("answer")
+        user_ans = answers[i] if i < len(answers) else None
+        if user_ans == correct:
+            score += 1
+            feedback.append({"question": q["question"], "correct": True})
+        else:
+            feedback.append({"question": q["question"], "correct": False, "correct_answer": correct})
 
-# ✅ Route: Healthcheck for Render diagnostics
-@app.route("/healthcheck", methods=["GET"])
-def healthcheck():
-    return "✅ DigitITBot backend is healthy!", 200
-
-
-# ✅ Route: Google Search Console Verification
-@app.route("/googlee310f7381f724126.html")
-def google_verification():
-    return app.send_static_file("googlee310f7381f724126.html")
+    return jsonify({"score": score, "total": len(questions), "feedback": feedback})
 
 
-# ✅ Route: Dynamic Sitemap
-@app.route("/sitemap.xml")
-def sitemap():
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    sitemap_content = f"""<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://digititbot.onrender.com/</loc>
-    <lastmod>{today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://digititbot.onrender.com/healthcheck</loc>
-    <lastmod>{today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.3</priority>
-  </url>
-</urlset>"""
-    return Response(sitemap_content, mimetype="application/xml")
-
-
-# ✅ Route: Robots.txt served dynamically
-@app.route("/robots.txt")
-def robots():
-    robots_content = """User-agent: *
-Allow: /
-
-# Disallow sensitive directories (optional)
-Disallow: /venv/
-Disallow: /__pycache__/
-Disallow: /.git/
-
-# Prefer dynamic sitemap
-Sitemap: https://digititbot.onrender.com/sitemap.xml
-
-# Fallback static sitemap
-Sitemap: https://digititbot.onrender.com/static/sitemap.xml
-"""
-    return Response(robots_content, mimetype="text/plain")
-
-
-# ✅ Local development only
 if __name__ == "__main__":
-    app.run(debug=True, port=5050)
+    app.run(debug=True)

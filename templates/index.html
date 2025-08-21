@@ -1,167 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DigitITBot - Free AI Assistant for ITIL, ITSM, ServiceNow & Cloud</title>
-
-  <!-- ✅ SEO Meta Tags -->
-  <meta name="description" content="DigitITBot is your AI-powered IT assistant for ITIL, ServiceNow, Cloud Infrastructure, Networking, and DevOps. Ask IT questions and get instant answers with trusted references.">
-  <meta name="keywords" content="DigitITBot, ITIL, ITSM, ServiceNow, Cloud Infrastructure, DevOps, AI Assistant for IT, Hybrid Infrastructure, Networking Support, IT Chatbot">
-  <meta name="author" content="Ritesh Fernandes">
-
-  <!-- ✅ Open Graph for Social Sharing -->
-  <meta property="og:title" content="DigitITBot - Your AI Assistant for ITIL, Cloud & ServiceNow">
-  <meta property="og:description" content="Get ITIL, ServiceNow, Cloud, Networking & DevOps support with DigitITBot, your free AI-powered IT assistant.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://digititbot.onrender.com">
-  <meta property="og:image" content="https://digititbot.onrender.com/static/digititbot-banner.png">
-
-  <!-- ✅ Google Search Console Verification -->
-  <meta name="google-site-verification" content="YOUR_GOOGLE_VERIFICATION_CODE_HERE" />
-
-  <!-- ✅ Structured Data for Google -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "DigitITBot",
-    "url": "https://digititbot.onrender.com",
-    "applicationCategory": "AI Assistant",
-    "description": "DigitITBot is a free AI-powered assistant for ITIL, ITSM, ServiceNow, Cloud, and DevOps.",
-    "author": {
-      "@type": "Person",
-      "name": "Ritesh Fernandes"
-    },
-    "operatingSystem": "Web",
-    "softwareVersion": "3.0.0"
-  }
-  </script>
-
-  <link rel="stylesheet" href="/static/style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DigitITBot Tutor</title>
+  <link rel="stylesheet" href="static/style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>💬 DigitITBot - Your Free AI IT Assistant</h1>
-    <p class="subtitle">Get instant help with ITIL, ServiceNow, Cloud Infrastructure, Networking, and DevOps.</p>
+  <div id="app">
+    <header>
+      <h1>📘 DigitITBot Tutor</h1>
+      <p>Your AI-powered IT Tutor & Quiz Assistant</p>
+    </header>
 
-    <!-- Name Input -->
-    <form id="name-form">
-      <label for="name">👤 Enter Your Full Name:</label>
-      <input type="text" id="name" placeholder="e.g., Ritesh Fernandes" />
-      <button type="submit">Save</button>
-      <button type="button" class="toggle-theme" id="theme-toggle">🌓 Toggle Theme</button>
-    </form>
-
-    <!-- Programming Language Filter -->
-    <form id="language-form">
-      <label for="language">🌐 Programming Language:</label>
-      <select id="language">
-        <option value="All">All</option>
-        <option value="Python">Python</option>
-        <option value="JavaScript">JavaScript</option>
-        <option value="Java">Java</option>
-        <option value="C++">C++</option>
-        <option value="HTML/CSS">HTML/CSS</option>
-      </select>
-    </form>
-
-    <!-- SEO Content Section -->
-    <section>
-      <h2>Why Choose DigitITBot?</h2>
-      <p>DigitITBot is designed to empower IT professionals with:</p>
-      <ul>
-        <li>✔ Quick answers to ITIL, ITSM, and ServiceNow questions</li>
-        <li>✔ Trusted references and hyperlinks for deeper learning</li>
-        <li>✔ Support for Cloud, Hybrid Infrastructure, and Networking</li>
-        <li>✔ AI-powered coding assistance in Python, Java, and more</li>
-      </ul>
+    <!-- Chat Section -->
+    <section id="chat-section">
+      <div id="chat-box"></div>
+      <input type="text" id="user-input" placeholder="Ask a question..." />
+      <button id="send-btn">Send</button>
     </section>
 
-    <!-- Chat Box -->
-    <div class="chat-box" id="chat-box"></div>
-    <p id="typing"></p>
+    <hr />
 
-    <!-- Message Input -->
-    <form id="chat-form">
-      <input type="text" id="message" placeholder="Ask an IT question..." autocomplete="off"/>
-      <button type="submit">Send</button>
-    </form>
+    <!-- Quiz Section -->
+    <section id="quiz-section">
+      <h2>🎯 Quiz Mode</h2>
+
+      <!-- Topic Selector -->
+      <label for="quiz-topic">Choose a Topic:</label>
+      <select id="quiz-topic">
+        <option value="ITIL">ITIL</option>
+        <option value="Cloud">Cloud</option>
+        <option value="ServiceNow">ServiceNow</option>
+        <option value="DevOps">DevOps</option>
+        <option value="Networking">Networking</option>
+      </select>
+
+      <!-- Number of Questions -->
+      <label for="quiz-count">Number of Questions:</label>
+      <input type="number" id="quiz-count" min="1" max="10" value="5" />
+
+      <button id="start-quiz">Start Quiz</button>
+
+      <!-- Quiz Timer -->
+      <div id="quiz-timer"></div>
+
+      <!-- Quiz Questions Render -->
+      <div id="quiz-container"></div>
+
+      <!-- Submit Quiz -->
+      <button id="submit-quiz" style="display:none;">Submit Quiz</button>
+
+      <!-- Results -->
+      <div id="quiz-results"></div>
+    </section>
   </div>
 
   <script>
     const chatBox = document.getElementById("chat-box");
-    const chatForm = document.getElementById("chat-form");
-    const messageInput = document.getElementById("message");
-    const nameInput = document.getElementById("name");
-    const nameForm = document.getElementById("name-form");
-    const languageSelect = document.getElementById("language");
-    const typingIndicator = document.getElementById("typing");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
 
-    if (localStorage.getItem("theme") === "dark") {
-      document.body.classList.add("dark");
-    }
-
-    document.getElementById("theme-toggle").onclick = () => {
-      document.body.classList.toggle("dark");
-      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
-    };
-
-    nameInput.value = localStorage.getItem("userName") || "";
-
-    nameForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      localStorage.setItem("userName", nameInput.value);
-      alert("Name saved!");
-    });
-
-    chatForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const message = messageInput.value.trim();
+    sendBtn.addEventListener("click", async () => {
+      const message = userInput.value;
       if (!message) return;
 
-      const userName = nameInput.value || "User";
-      const language = languageSelect.value;
+      chatBox.innerHTML += `<div class='user-msg'>${message}</div>`;
+      userInput.value = "";
 
-      appendMessage("user", userName, message);
-      messageInput.value = "";
-      typingIndicator.textContent = "🤖 DigitITBot is typing...";
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ message })
+      });
+      const data = await res.json();
 
-      try {
-        const response = await fetch("https://digititbot.onrender.com/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message, name: userName, language })
-        });
-
-        if (!response.ok) throw new Error("Server error");
-
-        const result = await response.json();
-        finalizeMarkdown("bot", "DigitITBot", result.response);
-
-      } catch (err) {
-        appendMessage("bot", "DigitITBot", "⚠️ Error: Could not connect to DigitITBot.");
-      } finally {
-        typingIndicator.textContent = "";
-      }
+      chatBox.innerHTML += `<div class='bot-msg'>${data.response}</div>`;
     });
 
-    function appendMessage(sender, name, text) {
-      const msg = document.createElement("div");
-      msg.classList.add(sender === "user" ? "user-bubble" : "bot-bubble");
-      msg.innerHTML = `<strong>${sender === "user" ? "👤" : "🤖"} ${name}:</strong> ${text}`;
-      chatBox.appendChild(msg);
-      chatBox.scrollTop = chatBox.scrollHeight;
+    // Quiz Logic
+    const startQuizBtn = document.getElementById("start-quiz");
+    const quizContainer = document.getElementById("quiz-container");
+    const quizResults = document.getElementById("quiz-results");
+    const submitQuizBtn = document.getElementById("submit-quiz");
+    const quizTimerEl = document.getElementById("quiz-timer");
+
+    let quizQuestions = [];
+    let userAnswers = [];
+    let timer;
+
+    startQuizBtn.addEventListener("click", async () => {
+      const topic = document.getElementById("quiz-topic").value;
+      const count = document.getElementById("quiz-count").value;
+
+      const res = await fetch("/quiz/start", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ topic: topic, num_questions: count })
+      });
+
+      const data = await res.json();
+      quizQuestions = data.questions;
+      userAnswers = Array(quizQuestions.length).fill(null);
+
+      renderQuiz();
+      startTimer(60); // 1-minute timer
+    });
+
+    function renderQuiz() {
+      quizContainer.innerHTML = "";
+      quizResults.innerHTML = "";
+      quizQuestions.forEach((q, i) => {
+        let optionsHTML = q.options.map(opt => `
+          <label>
+            <input type="radio" name="q${i}" value="${opt.charAt(0)}" onchange="saveAnswer(${i}, this.value)">
+            ${opt}
+          </label><br>
+        `).join("");
+
+        quizContainer.innerHTML += `
+          <div class="quiz-question">
+            <p><b>Q${i+1}:</b> ${q.question}</p>
+            ${optionsHTML}
+          </div>
+        `;
+      });
+
+      submitQuizBtn.style.display = "block";
     }
 
-    function finalizeMarkdown(sender, name, fullMarkdown) {
-      const msg = document.createElement("div");
-      msg.classList.add("bot-bubble");
-      msg.innerHTML = `<strong>🤖 ${name}:</strong><br>${marked.parse(fullMarkdown)}`;
-      chatBox.appendChild(msg);
-      chatBox.scrollTop = chatBox.scrollHeight;
+    function saveAnswer(index, value) {
+      userAnswers[index] = value;
     }
+
+    submitQuizBtn.addEventListener("click", submitQuiz);
+
+    async function submitQuiz() {
+      clearInterval(timer);
+      const res = await fetch("/quiz/submit", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ answers: userAnswers, questions: quizQuestions })
+      });
+      const data = await res.json();
+
+      quizResults.innerHTML = `<h3>✅ You scored ${data.score}/${data.total}</h3>`;
+      data.feedback.forEach(f => {
+        if (f.correct) {
+          quizResults.innerHTML += `<p>✔️ ${f.question} - Correct</p>`;
+        } else {
+          quizResults.innerHTML += `<p>❌ ${f.question} - Correct Answer: ${f.correct_answer}</p>`;
+        }
+      });
+
+      submitQuizBtn.style.display = "none";
+    }
+
+    function startTimer(duration) {
+      let timeLeft = duration;
+      quizTimerEl.innerText = `⏳ Time left: ${timeLeft}s`;
+
+      timer = setInterval(() => {
+        timeLeft--;
+        quizTimerEl.innerText = `⏳ Time left: ${timeLeft}s`;
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          submitQuiz();
+        }
+      }, 1000);
+    }
+
+    // Expose saveAnswer globally
+    window.saveAnswer = saveAnswer;
   </script>
 </body>
 </html>

@@ -1,10 +1,13 @@
 User-agent: *
 Allow: /
 
-# Disallow any sensitive directories (optional)
+# Disallow sensitive directories (optional)
 Disallow: /venv/
 Disallow: /__pycache__/
 Disallow: /.git/
 
-# Point Google and other crawlers to your sitemap
+# Prefer dynamic sitemap
 Sitemap: https://digititbot.onrender.com/sitemap.xml
+
+# Fallback static sitemap
+Sitemap: https://digititbot.onrender.com/static/sitemap.xml

@@ -1,67 +1,56 @@
+# digititbot.py
 import os
 from openai import OpenAI
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-ALLOWED_TOPICS = [
-    "IT", "Information Technology", "Mobile Devices", "PDAs", "Tablets",
-    "Computers", "Computer Networking", "Laptop Computers", "Desktop Computers",
-    "Agile Models", "Waterfall Models", "Software Programming", "Coding",
-    "Micro Processors", "Servers", "On-Premise Infrastructure", "Hybrid Infrastructure",
-    "Cloud Infrastructure Technology", "Virtualization", "ITIL", "ITSM", "ServiceNow"
-]
+def chat_with_gpt(message, user_name="User", language="All"):
+    """Regular chatbot responses."""
+    prompt = f"""
+    You are DigitITBot, an IT tutor specializing in ITIL, ITSM, ServiceNow, Cloud, Networking & DevOps.
+    Student name: {user_name}
+    Preferred programming language: {language}
+    Question: {message}
+    """
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": "You are a helpful IT tutor bot."},
+                  {"role": "user", "content": prompt}],
+        temperature=0.7
+    )
+    return response.choices[0].message.content.strip()
 
-def is_relevant_topic(user_input: str) -> bool:
-    return any(topic.lower() in user_input.lower() for topic in ALLOWED_TOPICS)
 
-def get_streaming_response(user_input: str, user_name: str, language: str):
+def generate_quiz_questions(topic="ITIL", num_questions=5):
+    """
+    Generate quiz questions dynamically with GPT.
+    Output format: JSON list of dicts with 'question', 'options', 'answer'.
+    """
+    prompt = f"""
+    Generate {num_questions} multiple-choice quiz questions on the topic: {topic}.
+    Each question should be scenario-based and test ITIL/Cloud/ITSM/DevOps concepts.
+    Format the output as strict JSON like this:
+    [
+      {{
+        "question": "What does ITIL stand for?",
+        "options": ["A. IT Infrastructure Library", "B. Internet Technology Integrated Language", "C. Information Technology and Innovation Lab", "D. Infrastructure Testing in Linux"],
+        "answer": "A"
+      }}
+    ]
+    Do NOT include explanations, only valid JSON.
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": "You are a quiz generator for IT students."},
+                  {"role": "user", "content": prompt}],
+        temperature=0.6
+    )
+
+    import json
     try:
-        if is_relevant_topic(user_input):
-            messages = [
-                {
-                    "role": "system",
-                    "content": (
-                        f"You are DigitITBot, a highly skilled IT assistant for {user_name}. "
-                        "Answer all IT questions precisely. Use bullet points, embed relevant hyperlinks, "
-                        f"and prioritize information relevant to '{language}' where appropriate."
-                    )
-                },
-                {"role": "user", "content": user_input}
-            ]
-        else:
-            messages = [
-                {
-                    "role": "system",
-                    "content": (
-                        f"You are DigitITBot, a helpful IT assistant for {user_name}. "
-                        "Reframe unrelated questions in an IT context. Use bullet points and links when helpful. "
-                        f"Prioritize answers based on '{language}' if applicable."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        f"The user asked: '{user_input}', which is not clearly IT-related. "
-                        "Please interpret it in an IT context and respond accordingly."
-                    )
-                }
-            ]
+        quiz_json = json.loads(response.choices[0].message.content.strip())
+    except Exception:
+        quiz_json = []
 
-        # Stream GPT-4o response
-        stream = client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages,
-            temperature=0.6,
-            stream=True
-        )
-
-        for chunk in stream:
-            delta = chunk.choices[0].delta
-            if hasattr(delta, "content") and delta.content:
-                yield delta.content
-
-    except Exception as e:
-        yield f"⚠️ Error: {str(e)}"
+    return quiz_json
